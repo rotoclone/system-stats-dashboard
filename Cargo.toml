@@ -5,4 +5,5 @@ authors = ["Steven Goldberg"]
 edition = "2018"
 
 [dependencies]
-systemstat = "0.1"
+#systemstat = "0.1"
+sysinfo = "0.16"

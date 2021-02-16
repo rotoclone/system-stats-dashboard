@@ -1,12 +1,66 @@
-use std::thread;
-
-use systemstat::{saturating_sub_bytes, Duration, Platform, System};
+use std::{thread, time::Duration};
+//use systemstat::{saturating_sub_bytes, Duration, Platform, System};
+use sysinfo::{NetworkExt, ProcessorExt, System, SystemExt};
 
 fn main() {
-    example();
+    //systemstat();
+    sysinfo();
 }
 
-fn example() {
+fn sysinfo() {
+    let mut sys = System::new_all();
+
+    // We display the disks:
+    println!("=> disk list:");
+    for disk in sys.get_disks() {
+        println!("{:?}", disk);
+    }
+
+    // Network data:
+    for (interface_name, data) in sys.get_networks() {
+        println!(
+            "{}: {}/{} B",
+            interface_name,
+            data.get_received(),
+            data.get_transmitted()
+        );
+    }
+
+    // Components temperature:
+    for component in sys.get_components() {
+        println!("{:?}", component);
+    }
+
+    // Memory information:
+    println!("total memory: {} KB", sys.get_total_memory());
+    println!("used memory : {} KB", sys.get_used_memory());
+    println!("total swap  : {} KB", sys.get_total_swap());
+    println!("used swap   : {} KB", sys.get_used_swap());
+
+    // Processors
+    sys.refresh_cpu();
+    thread::sleep(Duration::from_secs(1));
+    sys.refresh_cpu();
+    let processors = sys.get_processors();
+    println!("# of processors: {}", processors.len());
+    for processor in processors {
+        println!(
+            "Processor {} usage: {}%",
+            processor.get_name(),
+            processor.get_cpu_usage()
+        );
+    }
+
+    // Display system information:
+    println!("System name:             {:?}", sys.get_name());
+    println!("System kernel version:   {:?}", sys.get_kernel_version());
+    println!("System OS version:       {:?}", sys.get_os_version());
+    println!("System host name:        {:?}", sys.get_host_name());
+    println!("System uptime:           {:?}", sys.get_uptime());
+}
+
+/*
+fn systemstat() {
     let sys = System::new();
 
     match sys.mounts() {
@@ -130,3 +184,4 @@ fn example() {
         Err(x) => println!("\nSystem socket statistics: error: {}", x.to_string()),
     }
 }
+*/
