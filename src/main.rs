@@ -1,12 +1,71 @@
+use std::error::Error;
+
+use heim::{
+    host, memory, process, sensors,
+    units::{information, ratio, thermodynamic_temperature, time},
+};
+use tokio_stream::StreamExt;
+
 use std::{thread, time::Duration};
 //use systemstat::{saturating_sub_bytes, Duration, Platform, System};
-use sysinfo::{NetworkExt, ProcessorExt, System, SystemExt};
+//use sysinfo::{NetworkExt, ProcessorExt, System, SystemExt};
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     //systemstat();
-    sysinfo();
+    //sysinfo();
+    heim().await?;
+    Ok(())
 }
 
+async fn heim() -> Result<(), Box<dyn Error>> {
+    // cpu
+    let process = process::current().await?;
+    let measurement_1 = process.cpu_usage().await?;
+    // Or any other async timer at your choice
+    //futures_timer::Delay::new(Duration::from_millis(100)).await;
+    thread::sleep(Duration::from_millis(250));
+    let measurement_2 = process.cpu_usage().await?;
+
+    println!(
+        "CPU usage: {} %",
+        (measurement_2 - measurement_1).get::<ratio::percent>()
+    );
+
+    // uptime
+    let uptime = host::uptime().await?;
+    println!("Uptime: {} seconds", uptime.get::<time::second>());
+
+    // memory
+    let memory = memory::memory().await?;
+    let total_memory = memory.total();
+    let used_memory = total_memory - memory.available();
+    let memory_usage_pct = used_memory / total_memory; //TODO this doesn't work
+    println!(
+        "Memory usage: {}/{} MB ({}%)",
+        used_memory.get::<information::megabyte>(),
+        total_memory.get::<information::megabyte>(),
+        memory_usage_pct.get::<ratio::percent>()
+    );
+
+    // temperature
+    while let Some(x) = sensors::temperatures().next().await {
+        let temp = x?;
+        println!(
+            "{} temperature: {}C",
+            temp.label().unwrap_or("Unnamed sensor"),
+            temp.current()
+                .get::<thermodynamic_temperature::degree_celsius>()
+        );
+    }
+
+    // disk usage
+    //TODO
+
+    Ok(())
+}
+
+/*
 fn sysinfo() {
     let mut sys = System::new_all();
 
@@ -58,6 +117,7 @@ fn sysinfo() {
     println!("System host name:        {:?}", sys.get_host_name());
     println!("System uptime:           {:?}", sys.get_uptime());
 }
+*/
 
 /*
 fn systemstat() {
