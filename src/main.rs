@@ -231,38 +231,40 @@ fn systemstat() {
         Err(x) => println!("\nBoot time: error: {}", x),
     }
 
-    match sys.cpu_load() {
-        Ok(cpus) => {
-            println!("\nMeasuring CPU load...");
-            thread::sleep(Duration::from_secs(1));
-            for (i, cpu) in cpus.done().unwrap().iter().enumerate() {
-                println!("CPU {} load: {}%", i, (1.0 - cpu.idle) * 100.0);
+    loop {
+        let cpu_load = sys.cpu_load();
+        let cpu_load_aggregate = sys.cpu_load_aggregate();
+        println!("\nMeasuring CPU load...");
+        thread::sleep(Duration::from_secs(1));
+        match cpu_load {
+            Ok(cpus) => {
+                for (i, cpu) in cpus.done().unwrap().iter().enumerate() {
+                    println!("CPU {} load: {}%", i, (1.0 - cpu.idle) * 100.0);
+                    println!(
+                        "details: {} user, {} system, {} nice, {} interrupt, {} idle",
+                        cpu.user, cpu.system, cpu.nice, cpu.interrupt, cpu.idle
+                    );
+                }
+            }
+            Err(x) => println!("\nCPU load: error: {}", x),
+        }
+
+        match cpu_load_aggregate {
+            Ok(cpu) => {
+                let cpu = cpu.done().unwrap();
+                println!("Total CPU load: {}%", (1.0 - cpu.idle) * 100.0);
                 println!(
                     "details: {} user, {} system, {} nice, {} interrupt, {} idle",
                     cpu.user, cpu.system, cpu.nice, cpu.interrupt, cpu.idle
                 );
             }
+            Err(x) => println!("\nCPU load: error: {}", x),
         }
-        Err(x) => println!("\nCPU load: error: {}", x),
-    }
 
-    match sys.cpu_load_aggregate() {
-        Ok(cpu) => {
-            println!("\nMeasuring CPU load...");
-            thread::sleep(Duration::from_secs(1));
-            let cpu = cpu.done().unwrap();
-            println!("Total CPU load: {}%", (1.0 - cpu.idle) * 100.0);
-            println!(
-                "details: {} user, {} system, {} nice, {} interrupt, {} idle",
-                cpu.user, cpu.system, cpu.nice, cpu.interrupt, cpu.idle
-            );
+        match sys.cpu_temp() {
+            Ok(cpu_temp) => println!("\nCPU temp: {}", cpu_temp),
+            Err(x) => println!("\nCPU temp: {}", x),
         }
-        Err(x) => println!("\nCPU load: error: {}", x),
-    }
-
-    match sys.cpu_temp() {
-        Ok(cpu_temp) => println!("\nCPU temp: {}", cpu_temp),
-        Err(x) => println!("\nCPU temp: {}", x),
     }
 
     match sys.socket_stats() {
