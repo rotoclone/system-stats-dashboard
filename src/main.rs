@@ -236,11 +236,10 @@ fn systemstat() {
             println!("\nMeasuring CPU load...");
             thread::sleep(Duration::from_secs(1));
             for (i, cpu) in cpus.done().unwrap().iter().enumerate() {
+                println!("CPU {} load: {}%", i, (1.0 - cpu.idle) * 100.0);
                 println!(
-                    "CPU {} load: {}% ({}% idle)",
-                    i,
-                    (1.0 - cpu.idle) * 100.0,
-                    cpu.idle * 100.0
+                    "details: {} user, {} system, {} nice, {} interrupt, {} idle",
+                    cpu.user, cpu.system, cpu.nice, cpu.interrupt, cpu.idle
                 );
             }
         }
@@ -252,10 +251,10 @@ fn systemstat() {
             println!("\nMeasuring CPU load...");
             thread::sleep(Duration::from_secs(1));
             let cpu = cpu.done().unwrap();
+            println!("Total CPU load: {}%", (1.0 - cpu.idle) * 100.0);
             println!(
-                "Total CPU load: {}% ({}% idle)",
-                (1.0 - cpu.idle) * 100.0,
-                cpu.idle * 100.0
+                "details: {} user, {} system, {} nice, {} interrupt, {} idle",
+                cpu.user, cpu.system, cpu.nice, cpu.interrupt, cpu.idle
             );
         }
         Err(x) => println!("\nCPU load: error: {}", x),
