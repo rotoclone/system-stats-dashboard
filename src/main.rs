@@ -17,7 +17,7 @@ fn systemstat() {
                     let used = saturating_sub_bytes(mount.total, mount.avail);
                     let used_pct = (used.as_u64() as f64 / mount.total.as_u64() as f64) * 100.0;
                     println!(
-                        "{} ({}) at {}: {}/{} available ({}% used)",
+                        "{} ({}) at {}: {}/{} available ({:.1}% used)",
                         mount.fs_mounted_from,
                         mount.fs_type,
                         mount.fs_mounted_on,
@@ -60,7 +60,7 @@ fn systemstat() {
             let used_mem = saturating_sub_bytes(mem.total, mem.free);
             let used_pct = (used_mem.as_u64() as f64 / mem.total.as_u64() as f64) * 100.0;
             println!(
-                "\nMemory: {}/{} MB used ({}%)",
+                "\nMemory: {}/{} MB used ({:.1}%)",
                 bytes_to_mb(used_mem),
                 bytes_to_mb(mem.total),
                 used_pct,
@@ -94,7 +94,7 @@ fn systemstat() {
     match cpu_load {
         Ok(cpus) => {
             for (i, cpu) in cpus.done().unwrap().iter().enumerate() {
-                println!("CPU {} load: {}%", i, (1.0 - cpu.idle) * 100.0);
+                println!("CPU {} load: {:.1}%", i, (1.0 - cpu.idle) * 100.0);
             }
         }
         Err(x) => println!("\nCPU load: error: {}", x),
@@ -103,13 +103,13 @@ fn systemstat() {
     match cpu_load_aggregate {
         Ok(cpu) => {
             let cpu = cpu.done().unwrap();
-            println!("Total CPU load: {}%", (1.0 - cpu.idle) * 100.0);
+            println!("Total CPU load: {:.1}%", (1.0 - cpu.idle) * 100.0);
         }
         Err(x) => println!("\nCPU load: error: {}", x),
     }
 
     match sys.cpu_temp() {
-        Ok(cpu_temp) => println!("\nCPU temp: {}", cpu_temp),
+        Ok(cpu_temp) => println!("\nCPU temp: {:.1}C", cpu_temp),
         Err(x) => println!("\nCPU temp: {}", x),
     }
 
