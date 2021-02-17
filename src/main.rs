@@ -1,4 +1,7 @@
-use std::thread;
+use std::{
+    io::{Error, ErrorKind},
+    thread,
+};
 
 use rocket_contrib::json::Json;
 use serde::Serialize;
@@ -55,12 +58,12 @@ impl CpuStats {
             Ok(x) => match x.done() {
                 Ok(cpus) => cpus.iter().map(|cpu| (1.0 - cpu.idle) * 100.0).collect(),
                 Err(e) => {
-                    error!("Error getting per core CPU load: {}", e);
+                    log("Error getting per core CPU load: ", e);
                     Vec::new()
                 }
             },
             Err(e) => {
-                error!("Error getting per core CPU load: {}", e);
+                log("Error getting per core CPU load: ", e);
                 Vec::new()
             }
         };
@@ -68,7 +71,7 @@ impl CpuStats {
         let aggregate_load_percent = match cpu_load_aggregate {
             Ok(cpu) => (1.0 - cpu.done().unwrap().idle) * 100.0,
             Err(e) => {
-                error!("Error getting aggregate CPU load: {}", e);
+                log("Error getting aggregate CPU load: ", e);
                 0.0
             }
         };
@@ -76,7 +79,7 @@ impl CpuStats {
         let temp_celsius = match sys.cpu_temp() {
             Ok(x) => x,
             Err(e) => {
-                error!("Error getting CPU temperature: {}", e);
+                log("Error getting CPU temperature: ", e);
                 0.0
             }
         };
@@ -89,16 +92,31 @@ impl CpuStats {
     }
 }
 
+fn log(message: &str, e: Error) {
+    if e.to_string() == "Not supported" {
+        info!("{}{}", message, e);
+    } else {
+        error!("{}{}", message, e)
+    }
+}
+
 #[get("/stats")]
 fn stats() -> Json<Stats> {
     let sys = System::new();
+    let uptime_seconds = match sys.uptime() {
+        Ok(x) => x.as_secs(),
+        Err(e) => {
+            error!("Error getting uptime: {}", e);
+            0
+        }
+    };
+
     Json(Stats {
         filesystem: FilesystemStats::from(&sys),
         memory: MemoryStats::from(&sys),
         cpu: CpuStats::from(&sys, Duration::from_millis(200)),
-        uptime_seconds: 5,
+        uptime_seconds,
     })
-    //TODO
 }
 
 #[launch]
