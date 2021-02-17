@@ -1,3 +1,4 @@
+/*
 use std::error::Error;
 
 use heim::{
@@ -7,9 +8,9 @@ use heim::{
 use tokio_stream::StreamExt;
 
 use std::{thread, time::Duration};
-//use systemstat::{saturating_sub_bytes, Duration, Platform, System};
-//use sysinfo::{NetworkExt, ProcessorExt, System, SystemExt};
+*/
 
+/*
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     //systemstat();
@@ -64,6 +65,9 @@ async fn heim() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+*/
+
+//use sysinfo::{NetworkExt, ProcessorExt, System, SystemExt};
 
 /*
 fn sysinfo() {
@@ -119,7 +123,14 @@ fn sysinfo() {
 }
 */
 
-/*
+use std::thread;
+
+use systemstat::{saturating_sub_bytes, ByteSize, Duration, Platform, System};
+
+fn main() {
+    systemstat();
+}
+
 fn systemstat() {
     let sys = System::new();
 
@@ -189,13 +200,16 @@ fn systemstat() {
     }
 
     match sys.memory() {
-        Ok(mem) => println!(
-            "\nMemory: {} used / {} ({} bytes) total ({:?})",
-            saturating_sub_bytes(mem.total, mem.free),
-            mem.total,
-            mem.total.as_u64(),
-            mem.platform_memory
-        ),
+        Ok(mem) => {
+            let used_mem = saturating_sub_bytes(mem.total, mem.free);
+            let used_pct = (used_mem.as_u64() as f64 / mem.total.as_u64() as f64) * 100.0;
+            println!(
+                "\nMemory: {}/{} MB used ({}%)",
+                bytes_to_mb(used_mem),
+                bytes_to_mb(mem.total),
+                used_pct,
+            )
+        }
         Err(x) => println!("\nMemory: error: {}", x),
     }
 
@@ -217,19 +231,23 @@ fn systemstat() {
         Err(x) => println!("\nBoot time: error: {}", x),
     }
 
+    match sys.cpu_load() {
+        Ok(cpus) => {
+            println!("\nMeasuring CPU load...");
+            thread::sleep(Duration::from_secs(1));
+            for (i, cpu) in cpus.done().unwrap().iter().enumerate() {
+                println!("CPU {} load: {}%", i, (1.0 - cpu.idle) * 100.0);
+            }
+        }
+        Err(x) => println!("\nCPU load: error: {}", x),
+    }
+
     match sys.cpu_load_aggregate() {
         Ok(cpu) => {
             println!("\nMeasuring CPU load...");
             thread::sleep(Duration::from_secs(1));
             let cpu = cpu.done().unwrap();
-            println!(
-                "CPU load: {}% user, {}% nice, {}% system, {}% intr, {}% idle ",
-                cpu.user * 100.0,
-                cpu.nice * 100.0,
-                cpu.system * 100.0,
-                cpu.interrupt * 100.0,
-                cpu.idle * 100.0
-            );
+            println!("Total CPU load: {}%", (1.0 - cpu.idle) * 100.0);
         }
         Err(x) => println!("\nCPU load: error: {}", x),
     }
@@ -244,4 +262,7 @@ fn systemstat() {
         Err(x) => println!("\nSystem socket statistics: error: {}", x.to_string()),
     }
 }
-*/
+
+pub fn bytes_to_mb(byte_size: ByteSize) -> u64 {
+    byte_size.as_u64() / 1_000_000u64
+}
