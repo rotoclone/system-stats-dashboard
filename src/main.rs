@@ -153,6 +153,7 @@ fn systemstat() {
 
     match sys.block_device_statistics() {
         Ok(stats) => {
+            println!("\nBlock stats:");
             for blkstats in stats.values() {
                 println!("{}: {:?}", blkstats.name, blkstats);
             }
@@ -182,21 +183,6 @@ fn systemstat() {
             }
         }
         Err(x) => println!("\nNetworks: error: {}", x),
-    }
-
-    match sys.battery_life() {
-        Ok(battery) => print!(
-            "\nBattery: {}%, {}h{}m remaining",
-            battery.remaining_capacity * 100.0,
-            battery.remaining_time.as_secs() / 3600,
-            battery.remaining_time.as_secs() % 60
-        ),
-        Err(x) => print!("\nBattery: error: {}", x),
-    }
-
-    match sys.on_ac_power() {
-        Ok(power) => println!(", AC power: {}", power),
-        Err(x) => println!(", AC power: error: {}", x),
     }
 
     match sys.memory() {
@@ -239,10 +225,6 @@ fn systemstat() {
         Ok(cpus) => {
             for (i, cpu) in cpus.done().unwrap().iter().enumerate() {
                 println!("CPU {} load: {}%", i, (1.0 - cpu.idle) * 100.0);
-                println!(
-                    "details: {} user, {} system, {} nice, {} interrupt, {} idle",
-                    cpu.user, cpu.system, cpu.nice, cpu.interrupt, cpu.idle
-                );
             }
         }
         Err(x) => println!("\nCPU load: error: {}", x),
@@ -252,10 +234,6 @@ fn systemstat() {
         Ok(cpu) => {
             let cpu = cpu.done().unwrap();
             println!("Total CPU load: {}%", (1.0 - cpu.idle) * 100.0);
-            println!(
-                "details: {} user, {} system, {} nice, {} interrupt, {} idle",
-                cpu.user, cpu.system, cpu.nice, cpu.interrupt, cpu.idle
-            );
         }
         Err(x) => println!("\nCPU load: error: {}", x),
     }
