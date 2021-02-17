@@ -234,7 +234,7 @@ fn systemstat() {
     let cpu_load = sys.cpu_load();
     let cpu_load_aggregate = sys.cpu_load_aggregate();
     println!("\nMeasuring CPU load...");
-    thread::sleep(Duration::from_secs(1));
+    thread::sleep(Duration::from_millis(200));
     match cpu_load {
         Ok(cpus) => {
             for (i, cpu) in cpus.done().unwrap().iter().enumerate() {
