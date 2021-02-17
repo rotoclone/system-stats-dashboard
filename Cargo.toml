@@ -6,3 +6,6 @@ edition = "2018"
 
 [dependencies]
 systemstat = "0.1.7"
+rocket = { git = "https://github.com/SergioBenitez/Rocket", branch = "master" }
+rocket_contrib = { git = "https://github.com/SergioBenitez/Rocket", branch = "master" }
+serde = "1.0"

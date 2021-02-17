@@ -1,9 +1,109 @@
 use std::thread;
 
+use rocket_contrib::json::Json;
+use serde::Serialize;
 use systemstat::{saturating_sub_bytes, ByteSize, Duration, Platform, System};
 
-fn main() {
-    systemstat();
+#[macro_use]
+extern crate rocket;
+
+#[derive(Serialize)]
+struct Stats {
+    filesystem: FilesystemStats,
+    memory: MemoryStats,
+    cpu: CpuStats,
+    uptime_seconds: u64,
+}
+
+#[derive(Serialize)]
+struct FilesystemStats {
+    //TODO
+}
+
+impl FilesystemStats {
+    fn from(sys: &System) -> FilesystemStats {
+        FilesystemStats {}
+        //TODO
+    }
+}
+
+#[derive(Serialize)]
+struct MemoryStats {
+    //TODO
+}
+
+impl MemoryStats {
+    fn from(sys: &System) -> MemoryStats {
+        MemoryStats {}
+        //TODO
+    }
+}
+
+#[derive(Serialize)]
+struct CpuStats {
+    per_core_load_percent: Vec<f32>,
+    aggregate_load_percent: f32,
+    temp_celsius: f32,
+}
+
+impl CpuStats {
+    fn from(sys: &System, sample_time: Duration) -> CpuStats {
+        let cpu_load = sys.cpu_load();
+        let cpu_load_aggregate = sys.cpu_load_aggregate();
+        thread::sleep(sample_time);
+        let per_core_load_percent = match cpu_load {
+            Ok(x) => match x.done() {
+                Ok(cpus) => cpus.iter().map(|cpu| (1.0 - cpu.idle) * 100.0).collect(),
+                Err(e) => {
+                    error!("Error getting per core CPU load: {}", e);
+                    Vec::new()
+                }
+            },
+            Err(e) => {
+                error!("Error getting per core CPU load: {}", e);
+                Vec::new()
+            }
+        };
+
+        let aggregate_load_percent = match cpu_load_aggregate {
+            Ok(cpu) => (1.0 - cpu.done().unwrap().idle) * 100.0,
+            Err(e) => {
+                error!("Error getting aggregate CPU load: {}", e);
+                0.0
+            }
+        };
+
+        let temp_celsius = match sys.cpu_temp() {
+            Ok(x) => x,
+            Err(e) => {
+                error!("Error getting CPU temperature: {}", e);
+                0.0
+            }
+        };
+
+        CpuStats {
+            per_core_load_percent,
+            aggregate_load_percent,
+            temp_celsius,
+        }
+    }
+}
+
+#[get("/stats")]
+fn stats() -> Json<Stats> {
+    let sys = System::new();
+    Json(Stats {
+        filesystem: FilesystemStats::from(&sys),
+        memory: MemoryStats::from(&sys),
+        cpu: CpuStats::from(&sys, Duration::from_millis(200)),
+        uptime_seconds: 5,
+    })
+    //TODO
+}
+
+#[launch]
+fn rocket() -> rocket::Rocket {
+    rocket::ignite().mount("/", routes![stats])
 }
 
 fn systemstat() {
