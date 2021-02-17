@@ -139,29 +139,21 @@ fn systemstat() {
             println!("\nMounts:");
             for mount in mounts.iter() {
                 if mount.total.as_u64() != 0 {
+                    let used = saturating_sub_bytes(mount.total, mount.avail);
+                    let used_pct = (used.as_u64() as f64 / mount.total.as_u64() as f64) * 100.0;
                     println!(
-                        "{} ---{}---> {} (available {} of {})",
+                        "{} ({}) at {}: {}/{} available ({}% used)",
                         mount.fs_mounted_from,
                         mount.fs_type,
                         mount.fs_mounted_on,
                         mount.avail,
-                        mount.total
+                        mount.total,
+                        used_pct,
                     );
                 }
             }
         }
         Err(x) => println!("\nMounts: error: {}", x),
-    }
-
-    match sys.mount_at("/") {
-        Ok(mount) => {
-            println!("\nRoot fs:");
-            println!(
-                "{} ---{}---> {} (available {} of {})",
-                mount.fs_mounted_from, mount.fs_type, mount.fs_mounted_on, mount.avail, mount.total
-            );
-        }
-        Err(x) => println!("\nRoot fs: error: {}", x),
     }
 
     match sys.networks() {
