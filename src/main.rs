@@ -138,27 +138,30 @@ fn systemstat() {
         Ok(mounts) => {
             println!("\nMounts:");
             for mount in mounts.iter() {
-                println!(
-                    "{} ---{}---> {} (available {} of {})",
-                    mount.fs_mounted_from,
-                    mount.fs_type,
-                    mount.fs_mounted_on,
-                    mount.avail,
-                    mount.total
-                );
+                if mount.total.as_u64() != 0 {
+                    println!(
+                        "{} ---{}---> {} (available {} of {})",
+                        mount.fs_mounted_from,
+                        mount.fs_type,
+                        mount.fs_mounted_on,
+                        mount.avail,
+                        mount.total
+                    );
+                }
             }
         }
         Err(x) => println!("\nMounts: error: {}", x),
     }
 
-    match sys.block_device_statistics() {
-        Ok(stats) => {
-            println!("\nBlock stats:");
-            for blkstats in stats.values() {
-                println!("{}: {:?}", blkstats.name, blkstats);
-            }
+    match sys.mount_at("/") {
+        Ok(mount) => {
+            println!("\nRoot fs:");
+            println!(
+                "{} ---{}---> {} (available {} of {})",
+                mount.fs_mounted_from, mount.fs_type, mount.fs_mounted_on, mount.avail, mount.total
+            );
         }
-        Err(x) => println!("\nBlock statistics error: {}", x.to_string()),
+        Err(x) => println!("\nRoot fs: error: {}", x),
     }
 
     match sys.networks() {
