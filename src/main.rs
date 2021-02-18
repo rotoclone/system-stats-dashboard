@@ -2,7 +2,9 @@ use std::{io::Error, thread};
 
 use rocket_contrib::json::Json;
 use serde::Serialize;
-use systemstat::{saturating_sub_bytes, ByteSize, Duration, Platform, System};
+use systemstat::{
+    saturating_sub_bytes, ByteSize, Duration, IpAddr, NetworkAddrs, Platform, System,
+};
 
 #[macro_use]
 extern crate rocket;
@@ -225,6 +227,8 @@ impl NetworkStats {
 struct NetworkInterfaceStats {
     /// The name of the interface
     name: String,
+    /// IP addresses associated with this interface
+    addresses: Vec<String>,
     /// Total bytes sent via this interface
     sent_bytes: u64,
     /// Total bytes received via this interface
@@ -242,8 +246,41 @@ struct NetworkInterfaceStats {
 impl NetworkInterfaceStats {
     /// Gets a list of network interface stats for the provided system.
     fn from(sys: &System) -> Vec<NetworkInterfaceStats> {
-        //TODO
-        vec![]
+        match sys.networks() {
+            Ok(interfaces) => interfaces
+                .into_iter()
+                .filter_map(|(_, interface)| match sys.network_stats(&interface.name) {
+                    Ok(stats) => {
+                        let addresses = interface
+                            .addrs
+                            .into_iter()
+                            .filter_map(address_to_string)
+                            .collect();
+                        Some(NetworkInterfaceStats {
+                            name: interface.name,
+                            addresses,
+                            sent_bytes: stats.tx_bytes.as_u64(),
+                            received_bytes: stats.rx_bytes.as_u64(),
+                            sent_packets: stats.tx_packets,
+                            received_packets: stats.rx_packets,
+                            send_errors: stats.tx_errors,
+                            receive_errors: stats.rx_errors,
+                        })
+                    }
+                    Err(e) => {
+                        log(
+                            &format!("Error getting stats for interface {}: ", interface.name),
+                            e,
+                        );
+                        None
+                    }
+                })
+                .collect(),
+            Err(e) => {
+                log("Error getting network interfaces: ", e);
+                Vec::new()
+            }
+        }
     }
 }
 
@@ -331,20 +368,6 @@ fn systemstat() {
         Err(x) => println!("\nNetworks: error: {}", x),
     }
 
-    match sys.networks() {
-        Ok(netifs) => {
-            println!("\nNetwork interface statistics:");
-            for netif in netifs.values() {
-                println!(
-                    "{} statistics: ({:?})",
-                    netif.name,
-                    sys.network_stats(&netif.name)
-                );
-            }
-        }
-        Err(x) => println!("\nNetworks: error: {}", x),
-    }
-
     match sys.boot_time() {
         Ok(boot_time) => println!("\nBoot time: {}", boot_time),
         Err(x) => println!("\nBoot time: error: {}", x),
@@ -354,4 +377,12 @@ fn systemstat() {
 /// Gets the number of megabytes represented by the provided `ByteSize`.
 fn bytes_to_mb(byte_size: ByteSize) -> u64 {
     byte_size.as_u64() / BYTES_PER_MB
+}
+
+fn address_to_string(address: NetworkAddrs) -> Option<String> {
+    match address.addr {
+        IpAddr::V4(x) => Some(x.to_string()),
+        IpAddr::V6(x) => Some(x.to_string()),
+        _ => None,
+    }
 }
