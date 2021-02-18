@@ -20,9 +20,9 @@ struct AllStats {
     /// CPU stats
     cpu: CpuStats,
     /// Memory stats
-    memory: MemoryStats,
+    memory: Option<MemoryStats>,
     /// Stats for each mounted filesystem
-    filesystems: Vec<MountStats>,
+    filesystems: Option<Vec<MountStats>>,
     /// Network stats
     network: NetworkStats,
 }
@@ -32,37 +32,37 @@ struct AllStats {
 #[serde(rename_all = "camelCase")]
 struct GeneralStats {
     /// Number of seconds the system has been running
-    uptime_seconds: u64,
+    uptime_seconds: Option<u64>,
     /// Boot time in seconds since the UNIX epoch
-    boot_timestamp: i64,
+    boot_timestamp: Option<i64>,
     /// One, five, and fifteen-minute load average values for the system
-    load_averages: [f32; 3],
+    load_averages: Option<[f32; 3]>,
 }
 
 impl GeneralStats {
     /// Gets general stats for the provided system.
     fn from(sys: &System) -> GeneralStats {
         let uptime_seconds = match sys.uptime() {
-            Ok(x) => x.as_secs(),
+            Ok(x) => Some(x.as_secs()),
             Err(e) => {
                 error!("Error getting uptime: {}", e);
-                0
+                None
             }
         };
 
         let boot_timestamp = match sys.boot_time() {
-            Ok(boot_time) => boot_time.timestamp(),
+            Ok(boot_time) => Some(boot_time.timestamp()),
             Err(e) => {
                 log("Error getting boot time: ", e);
-                0
+                None
             }
         };
 
         let load_averages = match sys.load_average() {
-            Ok(x) => [x.one, x.five, x.fifteen],
+            Ok(x) => Some([x.one, x.five, x.fifteen]),
             Err(e) => {
                 log("Error getting load average: ", e);
-                [0.0, 0.0, 0.0]
+                None
             }
         };
 
@@ -79,9 +79,9 @@ impl GeneralStats {
 #[serde(rename_all = "camelCase")]
 struct CpuStats {
     /// Load percentages for each logical CPU
-    per_logical_cpu_load_percent: Vec<f32>,
+    per_logical_cpu_load_percent: Option<Vec<f32>>,
     /// Load percentage of the CPU as a whole
-    aggregate_load_percent: f32,
+    aggregate_load_percent: Option<f32>,
     /// Temperature of the CPU in degrees Celsius
     temp_celsius: Option<f32>,
 }
@@ -97,29 +97,29 @@ impl CpuStats {
         thread::sleep(sample_time);
         let per_logical_cpu_load_percent = match cpu_load {
             Ok(x) => match x.done() {
-                Ok(cpus) => cpus.iter().map(|cpu| (1.0 - cpu.idle) * 100.0).collect(),
+                Ok(cpus) => Some(cpus.iter().map(|cpu| (1.0 - cpu.idle) * 100.0).collect()),
                 Err(e) => {
                     log("Error getting per logical CPU load: ", e);
-                    Vec::new()
+                    None
                 }
             },
             Err(e) => {
                 log("Error getting per logical CPU load: ", e);
-                Vec::new()
+                None
             }
         };
 
         let aggregate_load_percent = match cpu_load_aggregate {
             Ok(x) => match x.done() {
-                Ok(cpu) => (1.0 - cpu.idle) * 100.0,
+                Ok(cpu) => Some((1.0 - cpu.idle) * 100.0),
                 Err(e) => {
                     log("Error getting aggregate CPU load: ", e);
-                    0.0
+                    None
                 }
             },
             Err(e) => {
                 log("Error getting aggregate CPU load: ", e);
-                0.0
+                None
             }
         };
 
@@ -150,20 +150,21 @@ struct MemoryStats {
 }
 
 impl MemoryStats {
-    /// Gets memory stats for the provided system.
-    fn from(sys: &System) -> MemoryStats {
-        let (used_mb, total_mb) = match sys.memory() {
+    /// Gets memory stats for the provided system. Returns `None` if an error occurs.
+    fn from(sys: &System) -> Option<MemoryStats> {
+        match sys.memory() {
             Ok(mem) => {
                 let used_mem = saturating_sub_bytes(mem.total, mem.free);
-                (bytes_to_mb(used_mem), bytes_to_mb(mem.total))
+                Some(MemoryStats {
+                    used_mb: bytes_to_mb(used_mem),
+                    total_mb: bytes_to_mb(mem.total),
+                })
             }
             Err(e) => {
                 log("Error getting memory usage: ", e);
-                (0, 0)
+                None
             }
-        };
-
-        MemoryStats { used_mb, total_mb }
+        }
     }
 }
 
@@ -184,29 +185,31 @@ struct MountStats {
 }
 
 impl MountStats {
-    /// Gets a list of mount stats for the provided system. Only mounts with more than 0 bytes of total space are included.
-    fn from(sys: &System) -> Vec<MountStats> {
+    /// Gets a list of mount stats for the provided system. Only mounts with more than 0 bytes of total space are included. Returns `None` if an error occurs.
+    fn from(sys: &System) -> Option<Vec<MountStats>> {
         match sys.mounts() {
-            Ok(mounts) => mounts
-                .into_iter()
-                .filter_map(|mount| {
-                    if mount.total.as_u64() == 0 {
-                        None
-                    } else {
-                        let used = saturating_sub_bytes(mount.total, mount.avail);
-                        Some(MountStats {
-                            fs_type: mount.fs_type,
-                            mounted_from: mount.fs_mounted_from,
-                            mounted_on: mount.fs_mounted_on,
-                            used_mb: bytes_to_mb(used),
-                            total_mb: bytes_to_mb(mount.total),
-                        })
-                    }
-                })
-                .collect(),
+            Ok(mounts) => Some(
+                mounts
+                    .into_iter()
+                    .filter_map(|mount| {
+                        if mount.total.as_u64() == 0 {
+                            None
+                        } else {
+                            let used = saturating_sub_bytes(mount.total, mount.avail);
+                            Some(MountStats {
+                                fs_type: mount.fs_type,
+                                mounted_from: mount.fs_mounted_from,
+                                mounted_on: mount.fs_mounted_on,
+                                used_mb: bytes_to_mb(used),
+                                total_mb: bytes_to_mb(mount.total),
+                            })
+                        }
+                    })
+                    .collect(),
+            ),
             Err(e) => {
                 log("Error getting mounts: ", e);
-                Vec::new()
+                None
             }
         }
     }
@@ -217,9 +220,9 @@ impl MountStats {
 #[serde(rename_all = "camelCase")]
 struct NetworkStats {
     /// Stats for network interfaces
-    interfaces: Vec<NetworkInterfaceStats>,
+    interfaces: Option<Vec<NetworkInterfaceStats>>,
     /// Stats for sockets
-    sockets: SocketStats,
+    sockets: Option<SocketStats>,
 }
 
 impl NetworkStats {
@@ -255,41 +258,43 @@ struct NetworkInterfaceStats {
 }
 
 impl NetworkInterfaceStats {
-    /// Gets a list of network interface stats for the provided system.
-    fn from(sys: &System) -> Vec<NetworkInterfaceStats> {
+    /// Gets a list of network interface stats for the provided system. Returns `None` if an error occurs.
+    fn from(sys: &System) -> Option<Vec<NetworkInterfaceStats>> {
         match sys.networks() {
-            Ok(interfaces) => interfaces
-                .into_iter()
-                .filter_map(|(_, interface)| match sys.network_stats(&interface.name) {
-                    Ok(stats) => {
-                        let addresses = interface
-                            .addrs
-                            .into_iter()
-                            .filter_map(address_to_string)
-                            .collect();
-                        Some(NetworkInterfaceStats {
-                            name: interface.name,
-                            addresses,
-                            sent_bytes: stats.tx_bytes.as_u64(),
-                            received_bytes: stats.rx_bytes.as_u64(),
-                            sent_packets: stats.tx_packets,
-                            received_packets: stats.rx_packets,
-                            send_errors: stats.tx_errors,
-                            receive_errors: stats.rx_errors,
-                        })
-                    }
-                    Err(e) => {
-                        log(
-                            &format!("Error getting stats for interface {}: ", interface.name),
-                            e,
-                        );
-                        None
-                    }
-                })
-                .collect(),
+            Ok(interfaces) => Some(
+                interfaces
+                    .into_iter()
+                    .filter_map(|(_, interface)| match sys.network_stats(&interface.name) {
+                        Ok(stats) => {
+                            let addresses = interface
+                                .addrs
+                                .into_iter()
+                                .filter_map(address_to_string)
+                                .collect();
+                            Some(NetworkInterfaceStats {
+                                name: interface.name,
+                                addresses,
+                                sent_bytes: stats.tx_bytes.as_u64(),
+                                received_bytes: stats.rx_bytes.as_u64(),
+                                sent_packets: stats.tx_packets,
+                                received_packets: stats.rx_packets,
+                                send_errors: stats.tx_errors,
+                                receive_errors: stats.rx_errors,
+                            })
+                        }
+                        Err(e) => {
+                            log(
+                                &format!("Error getting stats for interface {}: ", interface.name),
+                                e,
+                            );
+                            None
+                        }
+                    })
+                    .collect(),
+            ),
             Err(e) => {
                 log("Error getting network interfaces: ", e);
-                Vec::new()
+                None
             }
         }
     }
@@ -312,25 +317,19 @@ struct SocketStats {
 }
 
 impl SocketStats {
-    /// Gets socket stats for the provided system.
-    fn from(sys: &System) -> SocketStats {
+    /// Gets socket stats for the provided system. Returns `None` if an error occurs.
+    fn from(sys: &System) -> Option<SocketStats> {
         match sys.socket_stats() {
-            Ok(stats) => SocketStats {
+            Ok(stats) => Some(SocketStats {
                 tcp_in_use: stats.tcp_sockets_in_use,
                 tcp_orphaned: stats.tcp_sockets_orphaned,
                 udp_in_use: stats.udp_sockets_in_use,
                 tcp6_in_use: stats.tcp6_sockets_in_use,
                 udp6_in_use: stats.udp6_sockets_in_use,
-            },
+            }),
             Err(e) => {
                 log("Error getting socket stats: ", e);
-                SocketStats {
-                    tcp_in_use: 0,
-                    tcp_orphaned: 0,
-                    udp_in_use: 0,
-                    tcp6_in_use: 0,
-                    udp6_in_use: 0,
-                }
+                None
             }
         }
     }
