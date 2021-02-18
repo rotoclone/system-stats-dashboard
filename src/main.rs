@@ -12,6 +12,7 @@ extern crate rocket;
 
 const BYTES_PER_MB: u64 = 1_000_000;
 const DEFAULT_CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(250);
+const MAX_CPU_LOAD_SAMPLE_MS: u16 = 1000;
 
 /// All system stats
 #[derive(Serialize)]
@@ -108,11 +109,11 @@ impl CpuStats {
     /// Gets CPU stats for the provided system.
     /// # Params
     /// * `sys` - The system to get stats from.
-    /// * `sample_time` - The amount of time to take to sample CPU load. Note that this function will block the thread it's in for this duration before returning.
-    fn from(sys: &System, sample_time: Duration) -> CpuStats {
+    /// * `sample_duration` - The amount of time to take to sample CPU load. Note that this function will block the thread it's in for this duration before returning.
+    fn from(sys: &System, sample_duration: Duration) -> CpuStats {
         let cpu_load = sys.cpu_load();
         let cpu_load_aggregate = sys.cpu_load_aggregate();
-        thread::sleep(sample_time);
+        thread::sleep(sample_duration);
         let per_logical_cpu_load_percent = match cpu_load {
             Ok(x) => match x.done() {
                 Ok(cpus) => Some(cpus.iter().map(|cpu| (1.0 - cpu.idle) * 100.0).collect()),
@@ -363,17 +364,20 @@ fn log(message: &str, e: Error) {
 }
 
 /// Endpoint to get all the system stats.
-#[get("/stats")]
-fn get_all_stats() -> Json<AllStats> {
+#[get("/stats?<cpuSampleMs>")]
+#[allow(non_snake_case)]
+fn get_all_stats(cpuSampleMs: Option<u16>) -> Result<Json<AllStats>, Status> {
+    //TODO use a custom request guard instead?
+    let cpu_sample_duration = parse_cpu_sample_ms(cpuSampleMs)?;
     let sys = System::new();
 
-    Json(AllStats {
+    Ok(Json(AllStats {
         general: GeneralStats::from(&sys),
-        cpu: CpuStats::from(&sys, DEFAULT_CPU_LOAD_SAMPLE_DURATION),
+        cpu: CpuStats::from(&sys, cpu_sample_duration),
         memory: MemoryStats::from(&sys),
         filesystems: MountStats::from(&sys),
         network: NetworkStats::from(&sys),
-    })
+    }))
 }
 
 /// Endpoint to get general stats.
@@ -383,12 +387,12 @@ fn get_general_stats() -> Json<GeneralStats> {
 }
 
 /// Endpoint to get CPU stats.
-#[get("/stats/cpu")]
-fn get_cpu_stats() -> Json<CpuStats> {
-    Json(CpuStats::from(
-        &System::new(),
-        DEFAULT_CPU_LOAD_SAMPLE_DURATION,
-    ))
+#[get("/stats/cpu?<cpuSampleMs>")]
+#[allow(non_snake_case)]
+fn get_cpu_stats(cpuSampleMs: Option<u16>) -> Result<Json<CpuStats>, Status> {
+    //TODO use a custom request guard instead?
+    let cpu_sample_duration = parse_cpu_sample_ms(cpuSampleMs)?;
+    Ok(Json(CpuStats::from(&System::new(), cpu_sample_duration)))
 }
 
 /// Endpoint to get memory stats.
@@ -441,5 +445,23 @@ fn address_to_string(address: NetworkAddrs) -> Option<String> {
         IpAddr::V4(x) => Some(x.to_string()),
         IpAddr::V6(x) => Some(x.to_string()),
         _ => None,
+    }
+}
+
+/// Parses the provided CPU sample milleseconds into a `Duration`.
+///
+/// If `cpu_sample_ms` is `None`, `DEFAULT_CPU_LOAD_SAMPLE_DURATION` will be returned.
+/// If `cpu_sample_ms` is greater than `MAX_CPU_LOAD_SAMPLE_MS`, `Err` will be returned.
+/// Otherwise, a `Duration` built from `cpu_sample_ms` will be returned.
+fn parse_cpu_sample_ms(cpu_sample_ms: Option<u16>) -> Result<Duration, Status> {
+    match cpu_sample_ms {
+        Some(x) => {
+            if x > MAX_CPU_LOAD_SAMPLE_MS {
+                Err(Status::BadRequest)
+            } else {
+                Ok(Duration::from_millis(x.into()))
+            }
+        }
+        None => Ok(DEFAULT_CPU_LOAD_SAMPLE_DURATION),
     }
 }
