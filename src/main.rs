@@ -364,7 +364,7 @@ fn log(message: &str, e: Error) {
 
 /// Endpoint to get all the system stats.
 #[get("/stats")]
-fn all_stats() -> Json<AllStats> {
+fn get_all_stats() -> Json<AllStats> {
     let sys = System::new();
 
     Json(AllStats {
@@ -378,13 +378,13 @@ fn all_stats() -> Json<AllStats> {
 
 /// Endpoint to get general stats.
 #[get("/stats/general")]
-fn general_stats() -> Json<GeneralStats> {
+fn get_general_stats() -> Json<GeneralStats> {
     Json(GeneralStats::from(&System::new()))
 }
 
 /// Endpoint to get CPU stats.
 #[get("/stats/cpu")]
-fn cpu_stats() -> Json<CpuStats> {
+fn get_cpu_stats() -> Json<CpuStats> {
     Json(CpuStats::from(
         &System::new(),
         DEFAULT_CPU_LOAD_SAMPLE_DURATION,
@@ -393,7 +393,7 @@ fn cpu_stats() -> Json<CpuStats> {
 
 /// Endpoint to get memory stats.
 #[get("/stats/memory")]
-fn memory_stats() -> Result<Json<MemoryStats>, Status> {
+fn get_memory_stats() -> Result<Json<MemoryStats>, Status> {
     match MemoryStats::from(&System::new()) {
         Some(x) => Ok(Json(x)),
         None => Err(Status::InternalServerError),
@@ -402,7 +402,7 @@ fn memory_stats() -> Result<Json<MemoryStats>, Status> {
 
 /// Endpoint to get filesystem stats.
 #[get("/stats/filesystems")]
-fn filesystem_stats() -> Result<Json<Vec<MountStats>>, Status> {
+fn get_filesystem_stats() -> Result<Json<Vec<MountStats>>, Status> {
     match MountStats::from(&System::new()) {
         Some(x) => Ok(Json(x)),
         None => Err(Status::InternalServerError),
@@ -411,7 +411,7 @@ fn filesystem_stats() -> Result<Json<Vec<MountStats>>, Status> {
 
 /// Endpoint to get network stats.
 #[get("/stats/network")]
-fn network_stats() -> Json<NetworkStats> {
+fn get_network_stats() -> Json<NetworkStats> {
     Json(NetworkStats::from(&System::new()))
 }
 
@@ -420,12 +420,12 @@ fn rocket() -> rocket::Rocket {
     rocket::ignite().mount(
         "/",
         routes![
-            all_stats,
-            general_stats,
-            cpu_stats,
-            memory_stats,
-            filesystem_stats,
-            network_stats,
+            get_all_stats,
+            get_general_stats,
+            get_cpu_stats,
+            get_memory_stats,
+            get_filesystem_stats,
+            get_network_stats,
         ],
     )
 }
