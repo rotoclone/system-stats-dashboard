@@ -21,6 +21,8 @@ struct AllStats {
     memory: MemoryStats,
     /// Stats for each mounted filesystem
     filesystems: Vec<MountStats>,
+    /// Network stats
+    network: NetworkStats,
 }
 
 /// General system stats
@@ -68,7 +70,7 @@ struct CpuStats {
     /// Load percentage of the CPU as a whole
     aggregate_load_percent: f32,
     /// Temperature of the CPU in degrees Celsius
-    temp_celsius: f32,
+    temp_celsius: Option<f32>,
 }
 
 impl CpuStats {
@@ -109,10 +111,10 @@ impl CpuStats {
         };
 
         let temp_celsius = match sys.cpu_temp() {
-            Ok(x) => x,
+            Ok(x) => Some(x),
             Err(e) => {
                 log("Error getting CPU temperature: ", e);
-                0.0
+                None
             }
         };
 
@@ -197,6 +199,95 @@ impl MountStats {
     }
 }
 
+/// Network stats
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NetworkStats {
+    /// Stats for network interfaces
+    interfaces: Vec<NetworkInterfaceStats>,
+    /// Stats for sockets
+    sockets: SocketStats,
+}
+
+impl NetworkStats {
+    /// Gets network stats for the provided system.
+    fn from(sys: &System) -> NetworkStats {
+        NetworkStats {
+            interfaces: NetworkInterfaceStats::from(sys),
+            sockets: SocketStats::from(sys),
+        }
+    }
+}
+
+/// Stats for a network interface
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NetworkInterfaceStats {
+    /// The name of the interface
+    name: String,
+    /// Total bytes sent via this interface
+    sent_bytes: u64,
+    /// Total bytes received via this interface
+    received_bytes: u64,
+    /// Total packets sent via this interface
+    sent_packets: u64,
+    /// Total packets received via this interface
+    received_packets: u64,
+    /// Total number of errors that occured while sending data via this interface
+    send_errors: u64,
+    /// Total number of errors that occured while receiving data via this interface
+    receive_errors: u64,
+}
+
+impl NetworkInterfaceStats {
+    /// Gets a list of network interface stats for the provided system.
+    fn from(sys: &System) -> Vec<NetworkInterfaceStats> {
+        //TODO
+        vec![]
+    }
+}
+
+/// Stats for sockets
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SocketStats {
+    /// Number of TCP sockets in use
+    tcp_in_use: usize,
+    /// Number of orphaned TCP sockets
+    tcp_orphaned: usize,
+    /// Number of UDP sockets in use
+    udp_in_use: usize,
+    /// Number of IPv6 TCP sockets in use
+    tcp6_in_use: usize,
+    /// Number of IPv6 UDP sockets in use
+    udp6_in_use: usize,
+}
+
+impl SocketStats {
+    /// Gets socket stats for the provided system.
+    fn from(sys: &System) -> SocketStats {
+        match sys.socket_stats() {
+            Ok(stats) => SocketStats {
+                tcp_in_use: stats.tcp_sockets_in_use,
+                tcp_orphaned: stats.tcp_sockets_orphaned,
+                udp_in_use: stats.udp_sockets_in_use,
+                tcp6_in_use: stats.tcp6_sockets_in_use,
+                udp6_in_use: stats.udp6_sockets_in_use,
+            },
+            Err(e) => {
+                log("Error getting socket stats: ", e);
+                SocketStats {
+                    tcp_in_use: 0,
+                    tcp_orphaned: 0,
+                    udp_in_use: 0,
+                    tcp6_in_use: 0,
+                    udp6_in_use: 0,
+                }
+            }
+        }
+    }
+}
+
 /// Logs an error message. If the error is for a stat that isn't supported, logs at info level. Otherwise logs at error level.
 fn log(message: &str, e: Error) {
     if e.to_string() == "Not supported" {
@@ -217,6 +308,7 @@ fn stats() -> Json<AllStats> {
         cpu: CpuStats::from(&sys, Duration::from_millis(200)),
         memory: MemoryStats::from(&sys),
         filesystems: MountStats::from(&sys),
+        network: NetworkStats::from(&sys),
     })
 }
 
@@ -256,11 +348,6 @@ fn systemstat() {
     match sys.boot_time() {
         Ok(boot_time) => println!("\nBoot time: {}", boot_time),
         Err(x) => println!("\nBoot time: error: {}", x),
-    }
-
-    match sys.socket_stats() {
-        Ok(stats) => println!("\nSystem socket statistics: {:?}", stats),
-        Err(x) => println!("\nSystem socket statistics: error: {}", x.to_string()),
     }
 }
 
