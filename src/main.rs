@@ -33,6 +33,8 @@ struct AllStats {
 struct GeneralStats {
     /// Number of seconds the system has been running
     uptime_seconds: u64,
+    /// Boot time in seconds since the UNIX epoch
+    boot_timestamp: i64,
     /// One, five, and fifteen-minute load average values for the system
     load_averages: [f32; 3],
 }
@@ -48,6 +50,14 @@ impl GeneralStats {
             }
         };
 
+        let boot_timestamp = match sys.boot_time() {
+            Ok(boot_time) => boot_time.timestamp(),
+            Err(e) => {
+                log("Error getting boot time: ", e);
+                0
+            }
+        };
+
         let load_averages = match sys.load_average() {
             Ok(x) => [x.one, x.five, x.fifteen],
             Err(e) => {
@@ -58,6 +68,7 @@ impl GeneralStats {
 
         GeneralStats {
             uptime_seconds,
+            boot_timestamp,
             load_averages,
         }
     }
@@ -337,7 +348,6 @@ fn log(message: &str, e: Error) {
 /// Endpoint to get all the system stats.
 #[get("/stats")]
 fn stats() -> Json<AllStats> {
-    systemstat();
     let sys = System::new();
 
     Json(AllStats {
@@ -352,26 +362,6 @@ fn stats() -> Json<AllStats> {
 #[launch]
 fn rocket() -> rocket::Rocket {
     rocket::ignite().mount("/", routes![stats])
-}
-
-//TODO remove
-fn systemstat() {
-    let sys = System::new();
-
-    match sys.networks() {
-        Ok(netifs) => {
-            println!("\nNetworks:");
-            for netif in netifs.values() {
-                println!("{} ({:?})", netif.name, netif.addrs);
-            }
-        }
-        Err(x) => println!("\nNetworks: error: {}", x),
-    }
-
-    match sys.boot_time() {
-        Ok(boot_time) => println!("\nBoot time: {}", boot_time),
-        Err(x) => println!("\nBoot time: error: {}", x),
-    }
 }
 
 /// Gets the number of megabytes represented by the provided `ByteSize`.
