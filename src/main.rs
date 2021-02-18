@@ -1,5 +1,6 @@
 use std::{io::Error, thread};
 
+use rocket::http::Status;
 use rocket_contrib::json::Json;
 use serde::Serialize;
 use systemstat::{
@@ -10,6 +11,7 @@ use systemstat::{
 extern crate rocket;
 
 const BYTES_PER_MB: u64 = 1_000_000;
+const DEFAULT_CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(200);
 
 /// All system stats
 #[derive(Serialize)]
@@ -362,21 +364,70 @@ fn log(message: &str, e: Error) {
 
 /// Endpoint to get all the system stats.
 #[get("/stats")]
-fn stats() -> Json<AllStats> {
+fn all_stats() -> Json<AllStats> {
     let sys = System::new();
 
     Json(AllStats {
         general: GeneralStats::from(&sys),
-        cpu: CpuStats::from(&sys, Duration::from_millis(200)),
+        cpu: CpuStats::from(&sys, DEFAULT_CPU_LOAD_SAMPLE_DURATION),
         memory: MemoryStats::from(&sys),
         filesystems: MountStats::from(&sys),
         network: NetworkStats::from(&sys),
     })
 }
 
+/// Endpoint to get general stats.
+#[get("/stats/general")]
+fn general_stats() -> Json<GeneralStats> {
+    Json(GeneralStats::from(&System::new()))
+}
+
+/// Endpoint to get CPU stats.
+#[get("/stats/cpu")]
+fn cpu_stats() -> Json<CpuStats> {
+    Json(CpuStats::from(
+        &System::new(),
+        DEFAULT_CPU_LOAD_SAMPLE_DURATION,
+    ))
+}
+
+/// Endpoint to get memory stats.
+#[get("/stats/memory")]
+fn memory_stats() -> Result<Json<MemoryStats>, Status> {
+    match MemoryStats::from(&System::new()) {
+        Some(x) => Ok(Json(x)),
+        None => Err(Status::InternalServerError),
+    }
+}
+
+/// Endpoint to get filesystem stats.
+#[get("/stats/filesystems")]
+fn filesystem_stats() -> Result<Json<Vec<MountStats>>, Status> {
+    match MountStats::from(&System::new()) {
+        Some(x) => Ok(Json(x)),
+        None => Err(Status::InternalServerError),
+    }
+}
+
+/// Endpoint to get network stats.
+#[get("/stats/network")]
+fn network_stats() -> Json<NetworkStats> {
+    Json(NetworkStats::from(&System::new()))
+}
+
 #[launch]
 fn rocket() -> rocket::Rocket {
-    rocket::ignite().mount("/", routes![stats])
+    rocket::ignite().mount(
+        "/",
+        routes![
+            all_stats,
+            general_stats,
+            cpu_stats,
+            memory_stats,
+            filesystem_stats,
+            network_stats
+        ],
+    )
 }
 
 /// Gets the number of megabytes represented by the provided `ByteSize`.
@@ -384,6 +435,7 @@ fn bytes_to_mb(byte_size: ByteSize) -> u64 {
     byte_size.as_u64() / BYTES_PER_MB
 }
 
+/// Gets the string representation of a `NetworkAddrs`. Returns `None` if the address is anything other than IPv4 or IPv6.
 fn address_to_string(address: NetworkAddrs) -> Option<String> {
     match address.addr {
         IpAddr::V4(x) => Some(x.to_string()),
