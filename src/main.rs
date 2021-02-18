@@ -364,11 +364,10 @@ fn log(message: &str, e: Error) {
 }
 
 /// Endpoint to get all the system stats.
-#[get("/stats?<cpuSampleMs>")]
-#[allow(non_snake_case)]
-fn get_all_stats(cpuSampleMs: Option<u16>) -> Result<Json<AllStats>, Status> {
+#[get("/stats?<cpu_sample_ms>")]
+fn get_all_stats(cpu_sample_ms: Option<u16>) -> Result<Json<AllStats>, Status> {
     //TODO use a custom request guard instead?
-    let cpu_sample_duration = parse_cpu_sample_ms(cpuSampleMs)?;
+    let cpu_sample_duration = parse_cpu_sample_ms(cpu_sample_ms)?;
     let sys = System::new();
 
     Ok(Json(AllStats {
@@ -387,11 +386,10 @@ fn get_general_stats() -> Json<GeneralStats> {
 }
 
 /// Endpoint to get CPU stats.
-#[get("/stats/cpu?<cpuSampleMs>")]
-#[allow(non_snake_case)]
-fn get_cpu_stats(cpuSampleMs: Option<u16>) -> Result<Json<CpuStats>, Status> {
+#[get("/stats/cpu?<cpu_sample_ms>")]
+fn get_cpu_stats(cpu_sample_ms: Option<u16>) -> Result<Json<CpuStats>, Status> {
     //TODO use a custom request guard instead?
-    let cpu_sample_duration = parse_cpu_sample_ms(cpuSampleMs)?;
+    let cpu_sample_duration = parse_cpu_sample_ms(cpu_sample_ms)?;
     Ok(Json(CpuStats::from(&System::new(), cpu_sample_duration)))
 }
 
