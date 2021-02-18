@@ -2,9 +2,7 @@ use std::{io::Error, thread};
 
 use rocket_contrib::json::Json;
 use serde::Serialize;
-use systemstat::{
-    saturating_sub_bytes, ByteSize, CPULoad, DelayedMeasurement, Duration, Platform, System,
-};
+use systemstat::{saturating_sub_bytes, ByteSize, Duration, Platform, System};
 
 #[macro_use]
 extern crate rocket;
