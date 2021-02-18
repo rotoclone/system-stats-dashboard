@@ -35,8 +35,20 @@ struct GeneralStats {
     uptime_seconds: Option<u64>,
     /// Boot time in seconds since the UNIX epoch
     boot_timestamp: Option<i64>,
-    /// One, five, and fifteen-minute load average values for the system
-    load_averages: Option<[f32; 3]>,
+    /// Load average values for the system
+    load_averages: Option<LoadAverages>,
+}
+
+/// Load average values
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct LoadAverages {
+    /// Load average over the last minute
+    one_minute: f32,
+    /// Load average over the last 5 minutes
+    five_minutes: f32,
+    /// Load average over the last 15 minutes
+    fifteen_minutes: f32,
 }
 
 impl GeneralStats {
@@ -59,7 +71,11 @@ impl GeneralStats {
         };
 
         let load_averages = match sys.load_average() {
-            Ok(x) => Some([x.one, x.five, x.fifteen]),
+            Ok(x) => Some(LoadAverages {
+                one_minute: x.one,
+                five_minutes: x.five,
+                fifteen_minutes: x.fifteen,
+            }),
             Err(e) => {
                 log("Error getting load average: ", e);
                 None
