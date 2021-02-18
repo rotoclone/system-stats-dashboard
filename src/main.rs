@@ -33,26 +33,30 @@ struct MountStats {
     mounted_from: String,
     /// Root path corresponding to this mount
     mounted_on: String,
-    /// Megabytes of this mount used
+    /// Space of this mount used in megabytes
     used_mb: u64,
-    /// Megabytes total for this mount
+    /// Total space for this mount in megabytes
     total_mb: u64,
 }
 
 impl MountStats {
-    /// Gets a list of mount stats for the provided system.
+    /// Gets a list of mount stats for the provided system. Only mounts with more than 0 bytes of total space are included.
     fn from(sys: &System) -> Vec<MountStats> {
         match sys.mounts() {
             Ok(mounts) => mounts
                 .into_iter()
-                .map(|mount| {
-                    let used = saturating_sub_bytes(mount.total, mount.avail);
-                    MountStats {
-                        fs_type: mount.fs_type,
-                        mounted_from: mount.fs_mounted_from,
-                        mounted_on: mount.fs_mounted_on,
-                        used_mb: bytes_to_mb(used),
-                        total_mb: bytes_to_mb(mount.total),
+                .filter_map(|mount| {
+                    if mount.total.as_u64() == 0 {
+                        None
+                    } else {
+                        let used = saturating_sub_bytes(mount.total, mount.avail);
+                        Some(MountStats {
+                            fs_type: mount.fs_type,
+                            mounted_from: mount.fs_mounted_from,
+                            mounted_on: mount.fs_mounted_on,
+                            used_mb: bytes_to_mb(used),
+                            total_mb: bytes_to_mb(mount.total),
+                        })
                     }
                 })
                 .collect(),
