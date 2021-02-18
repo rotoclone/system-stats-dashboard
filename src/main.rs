@@ -1,7 +1,4 @@
-use std::{
-    io::{Error, ErrorKind},
-    thread,
-};
+use std::{io::Error, thread};
 
 use rocket_contrib::json::Json;
 use serde::Serialize;
@@ -10,60 +7,120 @@ use systemstat::{saturating_sub_bytes, ByteSize, Duration, Platform, System};
 #[macro_use]
 extern crate rocket;
 
+/// Base struct for all system stats
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct Stats {
-    filesystem: FilesystemStats,
+    /// Stats for each mounted filesystem
+    filesystems: Vec<MountStats>,
+    /// Memory stats
     memory: MemoryStats,
+    /// CPU stats
     cpu: CpuStats,
+    /// Number of seconds the system has been running
     uptime_seconds: u64,
 }
 
+/// Stats for a mounted filesystem
 #[derive(Serialize)]
-struct FilesystemStats {
-    //TODO
+#[serde(rename_all = "camelCase")]
+struct MountStats {
+    /// Type of filesystem (NTFS, ext3, etc.)
+    fs_type: String,
+    /// Name of the device corresponding to this mount
+    mounted_from: String,
+    /// Root path corresponding to this mount
+    mounted_on: String,
+    /// Megabytes of this mount used
+    used_mb: u64,
+    /// Megabytes total for this mount
+    total_mb: u64,
 }
 
-impl FilesystemStats {
-    fn from(sys: &System) -> FilesystemStats {
-        FilesystemStats {}
-        //TODO
+impl MountStats {
+    /// Gets a list of mount stats for the provided system.
+    fn from(sys: &System) -> Vec<MountStats> {
+        match sys.mounts() {
+            Ok(mounts) => mounts
+                .into_iter()
+                .map(|mount| {
+                    let used = saturating_sub_bytes(mount.total, mount.avail);
+                    MountStats {
+                        fs_type: mount.fs_type,
+                        mounted_from: mount.fs_mounted_from,
+                        mounted_on: mount.fs_mounted_on,
+                        used_mb: bytes_to_mb(used),
+                        total_mb: bytes_to_mb(mount.total),
+                    }
+                })
+                .collect(),
+            Err(e) => {
+                log("Error getting mounts: ", e);
+                Vec::new()
+            }
+        }
     }
 }
 
+/// Memory stats
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct MemoryStats {
-    //TODO
+    /// Megabytes of memory used
+    used_mb: u64,
+    /// Megabytes of memory total
+    total_mb: u64,
 }
 
 impl MemoryStats {
+    /// Gets memory stats for the provided system.
     fn from(sys: &System) -> MemoryStats {
-        MemoryStats {}
-        //TODO
+        let (used_mb, total_mb) = match sys.memory() {
+            Ok(mem) => {
+                let used_mem = saturating_sub_bytes(mem.total, mem.free);
+                (bytes_to_mb(used_mem), bytes_to_mb(mem.total))
+            }
+            Err(e) => {
+                log("Error getting memory usage: ", e);
+                (0, 0)
+            }
+        };
+
+        MemoryStats { used_mb, total_mb }
     }
 }
 
+/// CPU stats
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct CpuStats {
-    per_core_load_percent: Vec<f32>,
+    /// Load percentages for each logical CPU
+    per_logical_cpu_load_percent: Vec<f32>,
+    /// Load percentage of the CPU as a whole
     aggregate_load_percent: f32,
+    /// Temperature of the CPU in degrees Celsius
     temp_celsius: f32,
 }
 
 impl CpuStats {
+    /// Gets CPU stats for the provided system.
+    /// # Params
+    /// * `sys` - The system to get stats from.
+    /// * `sample_time` - The amount of time to take to sample CPU load. Note that this function will block the thread it's in for this duration before returning.
     fn from(sys: &System, sample_time: Duration) -> CpuStats {
         let cpu_load = sys.cpu_load();
         let cpu_load_aggregate = sys.cpu_load_aggregate();
         thread::sleep(sample_time);
-        let per_core_load_percent = match cpu_load {
+        let per_logical_cpu_load_percent = match cpu_load {
             Ok(x) => match x.done() {
                 Ok(cpus) => cpus.iter().map(|cpu| (1.0 - cpu.idle) * 100.0).collect(),
                 Err(e) => {
-                    log("Error getting per core CPU load: ", e);
+                    log("Error getting per logical CPU load: ", e);
                     Vec::new()
                 }
             },
             Err(e) => {
-                log("Error getting per core CPU load: ", e);
+                log("Error getting per logical CPU load: ", e);
                 Vec::new()
             }
         };
@@ -85,13 +142,14 @@ impl CpuStats {
         };
 
         CpuStats {
-            per_core_load_percent,
+            per_logical_cpu_load_percent,
             aggregate_load_percent,
             temp_celsius,
         }
     }
 }
 
+/// Logs an error message. If the error is for a stat that isn't supported, logs at info level. Otherwise logs at error level.
 fn log(message: &str, e: Error) {
     if e.to_string() == "Not supported" {
         info!("{}{}", message, e);
@@ -100,6 +158,7 @@ fn log(message: &str, e: Error) {
     }
 }
 
+/// Endpoint to get all the system stats.
 #[get("/stats")]
 fn stats() -> Json<Stats> {
     let sys = System::new();
@@ -112,7 +171,7 @@ fn stats() -> Json<Stats> {
     };
 
     Json(Stats {
-        filesystem: FilesystemStats::from(&sys),
+        filesystems: MountStats::from(&sys),
         memory: MemoryStats::from(&sys),
         cpu: CpuStats::from(&sys, Duration::from_millis(200)),
         uptime_seconds,
