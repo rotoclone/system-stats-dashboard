@@ -2,17 +2,19 @@ use std::{io::Error, thread};
 
 use rocket_contrib::json::Json;
 use serde::Serialize;
-use systemstat::{saturating_sub_bytes, ByteSize, Duration, Platform, System};
+use systemstat::{
+    saturating_sub_bytes, ByteSize, CPULoad, DelayedMeasurement, Duration, Platform, System,
+};
 
 #[macro_use]
 extern crate rocket;
 
 const BYTES_PER_MB: u64 = 1_000_000;
 
-/// Base struct for all system stats
+/// All system stats
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct Stats {
+struct AllStats {
     /// General system stats
     general: GeneralStats,
     /// CPU stats
@@ -95,7 +97,13 @@ impl CpuStats {
         };
 
         let aggregate_load_percent = match cpu_load_aggregate {
-            Ok(cpu) => (1.0 - cpu.done().unwrap().idle) * 100.0,
+            Ok(x) => match x.done() {
+                Ok(cpu) => (1.0 - cpu.idle) * 100.0,
+                Err(e) => {
+                    log("Error getting aggregate CPU load: ", e);
+                    0.0
+                }
+            },
             Err(e) => {
                 log("Error getting aggregate CPU load: ", e);
                 0.0
@@ -202,10 +210,11 @@ fn log(message: &str, e: Error) {
 
 /// Endpoint to get all the system stats.
 #[get("/stats")]
-fn stats() -> Json<Stats> {
+fn stats() -> Json<AllStats> {
+    systemstat();
     let sys = System::new();
 
-    Json(Stats {
+    Json(AllStats {
         general: GeneralStats::from(&sys),
         cpu: CpuStats::from(&sys, Duration::from_millis(200)),
         memory: MemoryStats::from(&sys),
@@ -218,6 +227,7 @@ fn rocket() -> rocket::Rocket {
     rocket::ignite().mount("/", routes![stats])
 }
 
+//TODO remove
 fn systemstat() {
     let sys = System::new();
 
@@ -257,6 +267,6 @@ fn systemstat() {
 }
 
 /// Gets the number of megabytes represented by the provided `ByteSize`.
-pub fn bytes_to_mb(byte_size: ByteSize) -> u64 {
+fn bytes_to_mb(byte_size: ByteSize) -> u64 {
     byte_size.as_u64() / BYTES_PER_MB
 }
