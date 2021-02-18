@@ -11,7 +11,7 @@ use systemstat::{
 extern crate rocket;
 
 const BYTES_PER_MB: u64 = 1_000_000;
-const DEFAULT_CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(200);
+const DEFAULT_CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(250);
 
 /// All system stats
 #[derive(Serialize)]
@@ -425,7 +425,7 @@ fn rocket() -> rocket::Rocket {
             cpu_stats,
             memory_stats,
             filesystem_stats,
-            network_stats
+            network_stats,
         ],
     )
 }
