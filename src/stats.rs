@@ -1,3 +1,5 @@
+use log::error;
+use log::info;
 use std::{io::Error, thread};
 
 use serde::Serialize;
@@ -21,6 +23,20 @@ pub struct AllStats {
     pub filesystems: Option<Vec<MountStats>>,
     /// Network stats
     pub network: NetworkStats,
+}
+
+impl AllStats {
+    /// Updates stats using the provided system.
+    /// # Params
+    /// * `sys` - The system to get stats from.
+    /// * `cpu_sample_duration` - The amount of time to take to sample CPU load. Note that this function will block the thread it's in for this duration before returning.
+    pub fn update(&mut self, sys: &System, cpu_sample_duration: Duration) {
+        self.general.update(sys);
+        self.cpu.update(sys, cpu_sample_duration);
+        self.memory = MemoryStats::from(sys);
+        self.filesystems = MountStats::from(sys);
+        self.network.update(sys);
+    }
 }
 
 impl Default for AllStats {
@@ -72,23 +88,42 @@ pub struct LoadAverages {
 impl GeneralStats {
     /// Gets general stats for the provided system.
     pub fn from(sys: &System) -> GeneralStats {
-        let uptime_seconds = match sys.uptime() {
+        GeneralStats {
+            uptime_seconds: Self::get_uptime_seconds(sys),
+            boot_timestamp: Self::get_boot_timestamp(sys),
+            load_averages: Self::get_load_averages(sys),
+        }
+    }
+
+    /// Updates stats using the provided system.
+    pub fn update(&mut self, sys: &System) {
+        self.uptime_seconds = Self::get_uptime_seconds(sys);
+        self.boot_timestamp = Self::get_boot_timestamp(sys);
+        self.load_averages = Self::get_load_averages(sys);
+    }
+
+    fn get_uptime_seconds(sys: &System) -> Option<u64> {
+        match sys.uptime() {
             Ok(x) => Some(x.as_secs()),
             Err(e) => {
-                error!("Error getting uptime: {}", e);
+                log("Error getting uptime: ", e);
                 None
             }
-        };
+        }
+    }
 
-        let boot_timestamp = match sys.boot_time() {
+    fn get_boot_timestamp(sys: &System) -> Option<i64> {
+        match sys.boot_time() {
             Ok(boot_time) => Some(boot_time.timestamp()),
             Err(e) => {
                 log("Error getting boot time: ", e);
                 None
             }
-        };
+        }
+    }
 
-        let load_averages = match sys.load_average() {
+    fn get_load_averages(sys: &System) -> Option<LoadAverages> {
+        match sys.load_average() {
             Ok(x) => Some(LoadAverages {
                 one_minute: x.one,
                 five_minutes: x.five,
@@ -98,12 +133,6 @@ impl GeneralStats {
                 log("Error getting load average: ", e);
                 None
             }
-        };
-
-        GeneralStats {
-            uptime_seconds,
-            boot_timestamp,
-            load_averages,
         }
     }
 }
@@ -136,6 +165,30 @@ impl CpuStats {
     /// * `sys` - The system to get stats from.
     /// * `sample_duration` - The amount of time to take to sample CPU load. Note that this function will block the thread it's in for this duration before returning.
     pub fn from(sys: &System, sample_duration: Duration) -> CpuStats {
+        let (per_logical_cpu_load_percent, aggregate_load_percent) =
+            Self::get_load(sys, sample_duration);
+
+        CpuStats {
+            per_logical_cpu_load_percent,
+            aggregate_load_percent,
+            temp_celsius: Self::get_temp_celsius(sys),
+        }
+    }
+
+    /// Updates stats using the provided system.
+    /// # Params
+    /// * `sys` - The system to get stats from.
+    /// * `sample_duration` - The amount of time to take to sample CPU load. Note that this function will block the thread it's in for this duration before returning.
+    pub fn update(&mut self, sys: &System, sample_duration: Duration) {
+        let (per_logical_cpu_load_percent, aggregate_load_percent) =
+            Self::get_load(sys, sample_duration);
+
+        self.per_logical_cpu_load_percent = per_logical_cpu_load_percent;
+        self.aggregate_load_percent = aggregate_load_percent;
+        self.temp_celsius = Self::get_temp_celsius(sys);
+    }
+
+    fn get_load(sys: &System, sample_duration: Duration) -> (Option<Vec<f32>>, Option<f32>) {
         let cpu_load = sys.cpu_load();
         let cpu_load_aggregate = sys.cpu_load_aggregate();
         thread::sleep(sample_duration);
@@ -167,18 +220,16 @@ impl CpuStats {
             }
         };
 
-        let temp_celsius = match sys.cpu_temp() {
+        (per_logical_cpu_load_percent, aggregate_load_percent)
+    }
+
+    fn get_temp_celsius(sys: &System) -> Option<f32> {
+        match sys.cpu_temp() {
             Ok(x) => Some(x),
             Err(e) => {
                 log("Error getting CPU temperature: ", e);
                 None
             }
-        };
-
-        CpuStats {
-            per_logical_cpu_load_percent,
-            aggregate_load_percent,
-            temp_celsius,
         }
     }
 }
@@ -285,6 +336,12 @@ impl NetworkStats {
             interfaces: NetworkInterfaceStats::from(sys),
             sockets: SocketStats::from(sys),
         }
+    }
+
+    /// Updates stats using the provided system.
+    pub fn update(&mut self, sys: &System) {
+        self.interfaces = NetworkInterfaceStats::from(sys);
+        self.sockets = SocketStats::from(sys);
     }
 }
 

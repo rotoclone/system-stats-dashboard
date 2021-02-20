@@ -67,6 +67,7 @@ fn get_network_stats() -> Json<NetworkStats> {
 
 #[launch]
 fn rocket() -> rocket::Rocket {
+    info!("yo"); //TODO
     rocket::ignite().mount(
         "/",
         routes![

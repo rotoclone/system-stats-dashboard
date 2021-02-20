@@ -9,3 +9,12 @@ systemstat = "0.1.7"
 rocket = { git = "https://github.com/SergioBenitez/Rocket", branch = "master" }
 rocket_contrib = { git = "https://github.com/SergioBenitez/Rocket", branch = "master" }
 serde = "1.0"
+bencher = "0.1.5" #TODO remove
+log = "0.4" #TODO remove?
+
+#TODO remove
+[[bench]]
+path = "src/benches/bench_stats.rs"
+name = "bench_stats"
+iterations = 10_000
+harness = false
