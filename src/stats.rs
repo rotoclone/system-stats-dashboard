@@ -23,18 +23,6 @@ pub struct AllStats {
     pub network: NetworkStats,
 }
 
-impl Default for AllStats {
-    fn default() -> Self {
-        AllStats {
-            general: GeneralStats::default(),
-            cpu: CpuStats::default(),
-            memory: None,
-            filesystems: None,
-            network: NetworkStats::default(),
-        }
-    }
-}
-
 /// General system stats
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -45,16 +33,6 @@ pub struct GeneralStats {
     boot_timestamp: Option<i64>,
     /// Load average values for the system
     load_averages: Option<LoadAverages>,
-}
-
-impl Default for GeneralStats {
-    fn default() -> Self {
-        GeneralStats {
-            uptime_seconds: None,
-            boot_timestamp: None,
-            load_averages: None,
-        }
-    }
 }
 
 /// Load average values
@@ -118,16 +96,6 @@ pub struct CpuStats {
     aggregate_load_percent: Option<f32>,
     /// Temperature of the CPU in degrees Celsius
     temp_celsius: Option<f32>,
-}
-
-impl Default for CpuStats {
-    fn default() -> Self {
-        CpuStats {
-            per_logical_cpu_load_percent: None,
-            aggregate_load_percent: None,
-            temp_celsius: None,
-        }
-    }
 }
 
 impl CpuStats {
@@ -267,15 +235,6 @@ pub struct NetworkStats {
     interfaces: Option<Vec<NetworkInterfaceStats>>,
     /// Stats for sockets
     sockets: Option<SocketStats>,
-}
-
-impl Default for NetworkStats {
-    fn default() -> Self {
-        NetworkStats {
-            interfaces: None,
-            sockets: None,
-        }
-    }
 }
 
 impl NetworkStats {
