@@ -5,6 +5,10 @@ use systemstat::{Duration, Platform, System};
 mod stats;
 use stats::*;
 
+mod auto_refreshing_stats;
+
+mod stats_history;
+
 #[macro_use]
 extern crate rocket;
 
