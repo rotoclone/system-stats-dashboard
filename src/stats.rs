@@ -75,7 +75,7 @@ impl GeneralStats {
         let uptime_seconds = match sys.uptime() {
             Ok(x) => Some(x.as_secs()),
             Err(e) => {
-                error!("Error getting uptime: {}", e);
+                log("Error getting uptime: ", e);
                 None
             }
         };
