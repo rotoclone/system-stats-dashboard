@@ -1,48 +1,50 @@
 use crate::stats::AllStats;
-use arr_macro::arr;
 
-const STATS_HISTORY_SIZE: usize = 100;
-
+/// A rolling history of system stats. As new stats are added, the oldest stats will be replaced if the history is full.
 pub struct StatsHistory {
-    stats: [Option<AllStats>; STATS_HISTORY_SIZE],
+    stats: Vec<AllStats>,
+    max_size: usize,
     most_recent_index: usize,
-}
-
-impl Default for StatsHistory {
-    fn default() -> Self {
-        StatsHistory {
-            stats: arr![None; 100],
-            most_recent_index: 0,
-        }
-    }
 }
 
 impl StatsHistory {
     /// Creates a `StatsHistory`.
-    pub fn new() -> StatsHistory {
-        StatsHistory::default()
+    /// # Params
+    /// * `max_size` - The maximum number of entries to hold in this history.
+    pub fn new(max_size: usize) -> StatsHistory {
+        StatsHistory {
+            stats: Vec::with_capacity(max_size),
+            max_size,
+            most_recent_index: 0,
+        }
     }
 
     /// Adds stats to the history.
     /// # Params
     /// * `new_stats` - The stats to add.
-    pub fn push(&mut self, new_stats: AllStats) {
-        let new_index = match self.get_most_recent_stats() {
-            Some(_) => self.get_next_index(),
-            None => self.most_recent_index,
-        };
-        self.most_recent_index = new_index;
-
-        self.stats[self.most_recent_index] = Some(new_stats);
+    fn push(&mut self, new_stats: AllStats) {
+        if self.stats.len() == self.max_size {
+            // The list is full, so we need to replace an existing entry
+            self.most_recent_index = self.get_next_index();
+            self.stats[self.most_recent_index] = new_stats;
+        } else {
+            // The list isn't full yet, so we can just add a new entry to the end
+            self.stats.push(new_stats);
+            self.most_recent_index = self.stats.len() - 1;
+        }
     }
 
     /// Gets the most recently added stats from the history. Returns `None` if the history is empty.
     pub fn get_most_recent_stats(&self) -> Option<&AllStats> {
-        self.stats[self.most_recent_index].as_ref()
+        if self.stats.is_empty() {
+            None
+        } else {
+            Some(&self.stats[self.most_recent_index])
+        }
     }
 
     fn get_next_index(&self) -> usize {
-        (self.most_recent_index + 1) % (STATS_HISTORY_SIZE - 1)
+        (self.most_recent_index + 1) % (self.max_size - 1)
     }
 }
 
@@ -80,13 +82,15 @@ impl<'a> Iterator for StatsHistoryIterator<'a> {
             return None;
         }
 
-        let result = self.stats_history.stats[self.index].as_ref();
+        let result = &self.stats_history.stats[self.index];
         if self.index == self.stats_history.most_recent_index {
             self.done = true;
         } else {
-            self.index = (self.index + 1) % (STATS_HISTORY_SIZE - 1);
+            self.index = (self.index + 1) % (self.stats_history.max_size - 1);
         }
 
-        result
+        Some(result)
     }
 }
+
+//TODO tests

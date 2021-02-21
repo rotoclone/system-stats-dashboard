@@ -8,10 +8,12 @@ use stats::*;
 mod auto_refreshing_stats;
 
 mod stats_history;
+use stats_history::*;
 
 #[macro_use]
 extern crate rocket;
 
+const STATS_HISTORY_SIZE: usize = 100;
 const DEFAULT_CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(250);
 const MAX_CPU_LOAD_SAMPLE_MS: u16 = 1000;
 
