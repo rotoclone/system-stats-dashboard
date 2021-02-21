@@ -8,7 +8,7 @@ use systemstat::{
 const BYTES_PER_MB: u64 = 1_000_000;
 
 /// All system stats
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AllStats {
     /// General system stats
@@ -23,8 +23,24 @@ pub struct AllStats {
     pub network: NetworkStats,
 }
 
+impl AllStats {
+    /// Gets all stats for the provided system.
+    /// # Params
+    /// * `sys` - The system to get stats from.
+    /// * `cpu_sample_duration` - The amount of time to take to sample CPU load. Note that this function will block the thread it's in for this duration before returning.
+    pub fn from(sys: &System, cpu_sample_duration: Duration) -> AllStats {
+        AllStats {
+            general: GeneralStats::from(&sys),
+            cpu: CpuStats::from(&sys, cpu_sample_duration),
+            memory: MemoryStats::from(&sys),
+            filesystems: MountStats::from(&sys),
+            network: NetworkStats::from(&sys),
+        }
+    }
+}
+
 /// General system stats
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GeneralStats {
     /// Number of seconds the system has been running
@@ -36,7 +52,7 @@ pub struct GeneralStats {
 }
 
 /// Load average values
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LoadAverages {
     /// Load average over the last minute
@@ -87,7 +103,7 @@ impl GeneralStats {
 }
 
 /// CPU stats
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CpuStats {
     /// Load percentages for each logical CPU
@@ -152,7 +168,7 @@ impl CpuStats {
 }
 
 /// Memory stats
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MemoryStats {
     /// Megabytes of memory used
@@ -181,7 +197,7 @@ impl MemoryStats {
 }
 
 /// Stats for a mounted filesystem
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MountStats {
     /// Type of filesystem (NTFS, ext3, etc.)
@@ -228,7 +244,7 @@ impl MountStats {
 }
 
 /// Network stats
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct NetworkStats {
     /// Stats for network interfaces
@@ -248,7 +264,7 @@ impl NetworkStats {
 }
 
 /// Stats for a network interface
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct NetworkInterfaceStats {
     /// The name of the interface
@@ -313,7 +329,7 @@ impl NetworkInterfaceStats {
 }
 
 /// Stats for sockets
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SocketStats {
     /// Number of TCP sockets in use
@@ -347,10 +363,10 @@ impl SocketStats {
     }
 }
 
-/// Logs an error message. If the error is for a stat that isn't supported, logs at info level. Otherwise logs at error level.
+/// Logs an error message. If the error is for a stat that isn't supported, logs at debug level. Otherwise logs at error level.
 fn log(message: &str, e: Error) {
     if e.to_string() == "Not supported" {
-        info!("{}{}", message, e);
+        debug!("{}{}", message, e);
     } else {
         error!("{}{}", message, e)
     }
