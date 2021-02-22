@@ -3,16 +3,13 @@ on: [push, pull_request]
 name: Cross-compile
 
 jobs:
-  build:
-    name: Build
+  check-raspberry-pi:
+    name: Check (Raspberry Pi)
     runs-on: ubuntu-latest
     strategy:
       matrix:
         target:
-          # Raspberry Pi
           - armv7-unknown-linux-gnueabihf
-          # Windows
-          - x86_64-pc-windows-gnu
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -23,5 +20,18 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           use-cross: true
-          command: build
+          command: check
           args: --release --target=${{ matrix.target }}
+  check-windows:
+    name: Check (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: check
