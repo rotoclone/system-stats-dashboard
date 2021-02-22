@@ -44,11 +44,11 @@ impl AllStats {
 #[serde(rename_all = "camelCase")]
 pub struct GeneralStats {
     /// Number of seconds the system has been running
-    uptime_seconds: Option<u64>,
+    pub uptime_seconds: Option<u64>,
     /// Boot time in seconds since the UNIX epoch
-    boot_timestamp: Option<i64>,
+    pub boot_timestamp: Option<i64>,
     /// Load average values for the system
-    load_averages: Option<LoadAverages>,
+    pub load_averages: Option<LoadAverages>,
 }
 
 /// Load average values

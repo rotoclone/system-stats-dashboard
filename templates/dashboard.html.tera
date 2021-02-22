@@ -1,0 +1,87 @@
+{% extends "base" %}
+{% block content %}
+    <script
+        crossorigin="anonymous"
+        integrity="sha512-d9xgZrVZpmmQlfonhQUvTR7lMPtO7NkZMkA0ABN3PHCbKA5nqylQ/yWlFAyY6hYgdF1Qh6nYiuADWwKB4C2WSw=="
+        src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+    {% for chart in charts %}
+        <div style="width:50%; height:300px">
+            <canvas id="{{ chart.id }}"></canvas>
+        </div>
+        <script>
+            var ctx = document.getElementById("{{ chart.id }}").getContext("2d");
+            var data = {
+                labels: {{ chart.x_values | json_encode() | safe }},
+                datasets: [
+                    {
+                        label: "Test dataset",
+                        borderColor: "#000000",
+                        lineTension: 0,
+                        data: {{ chart.y_values | json_encode() | safe }},
+                        fill: false
+                    }
+                ]
+            };
+            var options = {
+                animation: {
+                    duration: 400
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                title: {
+                    display: true,
+                    text: "{{ chart.title }}"
+                },
+                tooltips: {
+                    mode: "index",
+                    intersect: false
+                },
+                hover: {
+                    mode: "nearest",
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [
+                        {
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: "{{ chart.x_label }}"
+                            }
+                        }
+                    ],
+                    yAxes: [
+                        {
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: "{{ chart.y_label }}"
+                            }
+                        }
+                    ]
+                }
+            };
+            var chart = new Chart(ctx, {
+                type: "line",
+                data: data,
+                options: options
+            });
+        </script>
+    {% endfor %}
+    {% for section in sections %}
+        <h1>{{ section.name }}</h1>
+        <ul>
+            {% for stat in section.stats %}
+                <li>{{ stat }}</li>
+            {% endfor %}
+        </ul>
+        {% for subsection in section.subsections %}
+            <h2>{{ subsection.name }}</h2>
+            <ul>
+                {% for stat in subsection.stats %}
+                    <li>{{ stat }}</li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    {% endfor %}
+{% endblock content %}
