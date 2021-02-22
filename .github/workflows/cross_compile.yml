@@ -3,12 +3,13 @@ on: [push, pull_request]
 name: Cross-compile
 
 jobs:
-  check-raspberry-pi:
-    name: Check (Raspberry Pi)
+  check:
+    name: Check
     runs-on: ubuntu-latest
     strategy:
       matrix:
         target:
+          # Raspberry Pi
           - armv7-unknown-linux-gnueabihf
     steps:
       - uses: actions/checkout@v2
