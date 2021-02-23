@@ -104,11 +104,12 @@ impl<'a> IntoIterator for &'a StatsHistory {
     type IntoIter = StatsHistoryIterator<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        let starting_index = match self.stats.last() {
+        let starting_index = if self.stats.len() == self.max_size {
             // The array is full, so the oldest stats are in the next index. (Since it wraps around)
-            Some(_) => self.get_next_index(),
+            self.get_next_index()
+        } else {
             // The array is not full, so the oldest stats are at the beginning of the array.
-            None => 0,
+            0
         };
 
         StatsHistoryIterator {
@@ -129,6 +130,15 @@ impl<'a> Iterator for StatsHistoryIterator<'a> {
     type Item = &'a AllStats;
 
     fn next(&mut self) -> Option<Self::Item> {
+        /*
+        println!(
+            "most recent index: {}, size: {}, index: {}, done: {}",
+            self.stats_history.most_recent_index,
+            self.stats_history.stats.len(),
+            self.index,
+            self.done
+        );*/
+ //TODO remove
         if self.done {
             return None;
         }

@@ -14,8 +14,8 @@ use dashboard_context::*;
 #[macro_use]
 extern crate rocket;
 
-const STATS_HISTORY_SIZE: usize = 100;
-const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
+pub const STATS_HISTORY_SIZE: usize = 100;
+pub const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
 const CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(250);
 
 /// Endpoint to get all the system stats.

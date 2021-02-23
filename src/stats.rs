@@ -107,11 +107,11 @@ impl GeneralStats {
 #[serde(rename_all = "camelCase")]
 pub struct CpuStats {
     /// Load percentages for each logical CPU
-    per_logical_cpu_load_percent: Option<Vec<f32>>,
+    pub per_logical_cpu_load_percent: Option<Vec<f32>>,
     /// Load percentage of the CPU as a whole
-    aggregate_load_percent: Option<f32>,
+    pub aggregate_load_percent: Option<f32>,
     /// Temperature of the CPU in degrees Celsius
-    temp_celsius: Option<f32>,
+    pub temp_celsius: Option<f32>,
 }
 
 impl CpuStats {
