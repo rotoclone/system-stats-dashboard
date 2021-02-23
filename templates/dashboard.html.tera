@@ -24,7 +24,7 @@
             };
             var options = {
                 animation: {
-                    duration: 400
+                    duration: 0
                 },
                 responsive: true,
                 maintainAspectRatio: false,

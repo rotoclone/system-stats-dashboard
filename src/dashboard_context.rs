@@ -42,18 +42,19 @@ impl DashboardContext {
 
         let mut charts = Vec::new();
         let stats_update_seconds = STATS_UPDATE_FREQUENCY.as_secs().try_into().unwrap();
-        let x_values = (0..=STATS_HISTORY_SIZE * stats_update_seconds)
+        let x_values: Vec<String> = (0..=STATS_HISTORY_SIZE * stats_update_seconds)
             .rev()
+            .skip(stats_update_seconds)
             .step_by(stats_update_seconds)
             .map(|x| x.to_string())
             .collect();
-        let y_values = stats_history
+        let mut y_values: Vec<f32> = stats_history
             .into_iter()
-            .map(|stats| match stats.cpu.aggregate_load_percent {
-                Some(x) => x,
-                None => 0.0,
-            })
+            .map(|stats| stats.cpu.aggregate_load_percent.unwrap_or(0.0))
             .collect();
+        while y_values.len() < x_values.len() {
+            y_values.insert(0, 0.0);
+        }
         charts.push(ChartContext {
             id: "cpu-chart".to_string(),
             title: "CPU Usage".to_string(),
@@ -61,19 +62,6 @@ impl DashboardContext {
             y_label: "Usage (%)".to_string(),
             x_values,
             y_values,
-        });
-        charts.push(ChartContext {
-            id: "test-chart-2".to_string(),
-            title: "Another Test Chart".to_string(),
-            x_label: "Time".to_string(),
-            y_label: "Amount".to_string(),
-            x_values: vec![
-                "a long time ago".to_string(),
-                "not that long ago".to_string(),
-                "just recently".to_string(),
-                "right now".to_string(),
-            ],
-            y_values: vec![9.0, 8.0, 3.5, 5.1, 2.0, 4.0, 5.0],
         });
 
         let mut sections = Vec::new();

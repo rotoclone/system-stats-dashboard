@@ -130,15 +130,6 @@ impl<'a> Iterator for StatsHistoryIterator<'a> {
     type Item = &'a AllStats;
 
     fn next(&mut self) -> Option<Self::Item> {
-        /*
-        println!(
-            "most recent index: {}, size: {}, index: {}, done: {}",
-            self.stats_history.most_recent_index,
-            self.stats_history.stats.len(),
-            self.index,
-            self.done
-        );*/
- //TODO remove
         if self.done {
             return None;
         }
