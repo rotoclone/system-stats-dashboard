@@ -172,9 +172,9 @@ impl CpuStats {
 #[serde(rename_all = "camelCase")]
 pub struct MemoryStats {
     /// Megabytes of memory used
-    used_mb: u64,
+    pub used_mb: u64,
     /// Megabytes of memory total
-    total_mb: u64,
+    pub total_mb: u64,
 }
 
 impl MemoryStats {

@@ -12,15 +12,13 @@
             var ctx = document.getElementById("{{ chart.id }}").getContext("2d");
             var data = {
                 labels: {{ chart.x_values | json_encode() | safe }},
-                datasets: [
-                    {
-                        label: "Test dataset",
-                        borderColor: "#000000",
-                        lineTension: 0,
-                        data: {{ chart.y_values | json_encode() | safe }},
-                        fill: false
-                    }
-                ]
+                datasets: [{% for dataset in chart.datasets %}{
+                            label: "{{ dataset.name }}",
+                            borderColor: "{{ dataset.color_code }}",
+                            lineTension: 0.25,
+                            data: {{ dataset.values | json_encode() | safe }},
+                            fill: false
+                        },{% endfor %}]
             };
             var options = {
                 animation: {
