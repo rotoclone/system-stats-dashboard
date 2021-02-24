@@ -1,6 +1,5 @@
 use std::convert::TryInto;
 
-use rocket::data;
 use serde::Serialize;
 
 use crate::{
