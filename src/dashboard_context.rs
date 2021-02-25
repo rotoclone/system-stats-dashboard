@@ -1,8 +1,7 @@
-use std::convert::TryInto;
-
+use chrono::{DateTime, Local};
 use serde::Serialize;
 
-use crate::{stats::GeneralStats, stats_history::StatsHistory, STATS_UPDATE_FREQUENCY};
+use crate::{stats::GeneralStats, stats_history::StatsHistory};
 
 #[derive(Serialize)]
 pub struct DashboardContext {
@@ -119,6 +118,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     let mut aggregate_values = Vec::new();
     let mut per_logical_cpu_values = Vec::new();
     let mut temp_values = Vec::new();
+    let mut x_values = Vec::new();
     let empty_vec = Vec::new();
     for stats in stats_history.into_iter() {
         aggregate_values.push(stats.cpu.aggregate_load_percent.unwrap_or(0.0));
@@ -130,9 +130,8 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
                 .unwrap_or(&empty_vec),
         );
         temp_values.push(stats.cpu.temp_celsius.unwrap_or(0.0));
+        x_values.push(format_time(stats.collection_time));
     }
-
-    let usage_x_values = build_x_values(aggregate_values.len());
 
     cpu_datasets.push(DatasetContext {
         name: "Aggregate".to_string(),
@@ -171,14 +170,13 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         id: "cpu-usage-chart".to_string(),
         title: "CPU Usage".to_string(),
         datasets: cpu_datasets,
-        x_label: "Seconds ago".to_string(),
+        x_label: "Time".to_string(),
         y_label: "Usage (%)".to_string(),
-        x_values: usage_x_values,
+        x_values: x_values.clone(),
         min_y: 0.0,
         max_y: 100.0,
     });
 
-    let temp_x_values = build_x_values(temp_values.len());
     charts.push(ChartContext {
         id: "cpu-temp-chart".to_string(),
         title: "Temperature".to_string(),
@@ -189,11 +187,11 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
             values: temp_values,
             fill: true,
         }],
-        x_label: "Seconds ago".to_string(),
+        x_label: "Time".to_string(),
         y_label: "Temperature (C)".to_string(),
-        x_values: temp_x_values,
+        x_values,
         min_y: 0.0,
-        max_y: 0.0,
+        max_y: 85.0,
     });
 
     charts
@@ -202,6 +200,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
 fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
     let mut memory_values = Vec::new();
     let mut memory_total_mb = 0;
+    let mut x_values = Vec::new();
     for stats in stats_history.into_iter() {
         match &stats.memory {
             Some(x) => {
@@ -212,9 +211,9 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
             }
             None => memory_values.push(0.0),
         }
+        x_values.push(format_time(stats.collection_time));
     }
 
-    let x_values = build_x_values(memory_values.len());
     ChartContext {
         id: "ram-chart".to_string(),
         title: "Memory Usage".to_string(),
@@ -225,7 +224,7 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
             values: memory_values,
             fill: true,
         }],
-        x_label: "Seconds ago".to_string(),
+        x_label: "Time".to_string(),
         y_label: "Usage (MB)".to_string(),
         x_values,
         min_y: 0.0,
@@ -233,11 +232,6 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
     }
 }
 
-fn build_x_values(limit: usize) -> Vec<String> {
-    let stats_update_seconds = STATS_UPDATE_FREQUENCY.as_secs().try_into().unwrap();
-    (0..=(limit * stats_update_seconds) - stats_update_seconds)
-        .rev()
-        .step_by(stats_update_seconds)
-        .map(|x| x.to_string())
-        .collect()
+fn format_time(time: DateTime<Local>) -> String {
+    time.format("%Y-%m-%d %H:%M:%S").to_string()
 }
