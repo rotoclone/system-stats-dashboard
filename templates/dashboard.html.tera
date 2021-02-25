@@ -14,10 +14,11 @@
                 labels: {{ chart.x_values | json_encode() | safe }},
                 datasets: [{% for dataset in chart.datasets %}{
                             label: "{{ dataset.name }}",
-                            borderColor: "{{ dataset.color_code }}",
+                            borderColor: "{{ dataset.line_color_code }}",
+                            backgroundColor: "{{ dataset.fill_color_code }}",
                             lineTension: 0.25,
                             data: {{ dataset.values | json_encode() | safe }},
-                            fill: false
+                            fill: {{ dataset.fill }}
                         },{% endfor %}]
             };
             var options = {
@@ -51,6 +52,9 @@
                     yAxes: [
                         {
                             display: true,
+                            ticks: {
+                                suggestedMax: {{ chart.max_y }}
+                            },
                             scaleLabel: {
                                 display: true,
                                 labelString: "{{ chart.y_label }}"

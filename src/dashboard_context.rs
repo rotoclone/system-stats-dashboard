@@ -15,19 +15,34 @@ pub struct DashboardContext {
 
 #[derive(Serialize)]
 struct ChartContext {
+    /// The id of this chart. Must be unique.
     id: String,
+    /// The title of this chart.
     title: String,
+    /// The datasets displayed on this chart.
     datasets: Vec<DatasetContext>,
+    /// The label for the X axis.
     x_label: String,
+    /// The label for the Y axis.
     y_label: String,
+    /// Names of the markers on the X axis.
     x_values: Vec<String>,
+    /// The highest possible Y value expected for this chart.
+    max_y: f32,
 }
 
 #[derive(Serialize)]
 struct DatasetContext {
+    /// The name of this dataset.
     name: String,
-    color_code: String,
+    /// Color code used for the line.
+    line_color_code: String,
+    /// Color code used for the area under the line. Only relevant if `fill` is `true`.
+    fill_color_code: String,
+    /// The values in this dataset.
     values: Vec<f32>,
+    /// Whether to fill the area under the line.
+    fill: bool,
 }
 
 #[derive(Serialize)]
@@ -120,8 +135,10 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
 
     cpu_datasets.push(DatasetContext {
         name: "Aggregate %".to_string(),
-        color_code: "#000000".to_string(),
+        line_color_code: "#000000".to_string(),
+        fill_color_code: "#00995599".to_string(),
         values: aggregate_cpu_values,
+        fill: true,
     });
 
     // TODO there's gotta be a better way to do this
@@ -143,8 +160,10 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         pad_vec(&mut values, 0.0, x_values.len());
         cpu_datasets.push(DatasetContext {
             name: format!("CPU {} %", i),
-            color_code: "#999999".to_string(),
+            line_color_code: "#00000044".to_string(),
+            fill_color_code: "".to_string(),
             values,
+            fill: false,
         });
     }
 
@@ -155,6 +174,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         x_label: "Seconds ago".to_string(),
         y_label: "Usage (%)".to_string(),
         x_values,
+        max_y: 100.0,
     });
 
     charts
@@ -164,9 +184,15 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
     let x_values: Vec<String> = build_x_values();
 
     let mut memory_values = Vec::new();
+    let mut memory_total_mb = 0;
     for stats in stats_history.into_iter() {
         match &stats.memory {
-            Some(x) => memory_values.push(x.used_mb as f32),
+            Some(x) => {
+                if x.total_mb > memory_total_mb {
+                    memory_total_mb = x.total_mb;
+                }
+                memory_values.push(x.used_mb as f32)
+            }
             None => memory_values.push(0.0),
         }
     }
@@ -177,12 +203,15 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
         title: "Memory Usage".to_string(),
         datasets: vec![DatasetContext {
             name: "MB Used".to_string(),
-            color_code: "#000000".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: "#0055ff99".to_string(),
             values: memory_values,
+            fill: true,
         }],
         x_label: "Seconds ago".to_string(),
         y_label: "Usage (MB)".to_string(),
         x_values,
+        max_y: memory_total_mb as f32,
     }
 }
 
