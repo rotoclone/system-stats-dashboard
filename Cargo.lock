@@ -169,6 +169,7 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits",
+ "serde",
  "time 0.1.44",
  "winapi 0.3.9",
 ]
@@ -1573,6 +1574,7 @@ dependencies = [
 name = "system-stats-api"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "rocket",
  "rocket_contrib",
  "serde",

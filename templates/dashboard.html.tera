@@ -53,6 +53,7 @@
                         {
                             display: true,
                             ticks: {
+                                suggestedMin: {{ chart.min_y }},
                                 suggestedMax: {{ chart.max_y }}
                             },
                             scaleLabel: {

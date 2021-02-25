@@ -25,6 +25,8 @@ struct ChartContext {
     y_label: String,
     /// Names of the markers on the X axis.
     x_values: Vec<String>,
+    /// The lowest possible Y value expected for this chart.
+    min_y: f32,
     /// The highest possible Y value expected for this chart.
     max_y: f32,
 }
@@ -172,6 +174,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         x_label: "Seconds ago".to_string(),
         y_label: "Usage (%)".to_string(),
         x_values: usage_x_values,
+        min_y: 0.0,
         max_y: 100.0,
     });
 
@@ -189,6 +192,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         x_label: "Seconds ago".to_string(),
         y_label: "Temperature (C)".to_string(),
         x_values: temp_x_values,
+        min_y: 0.0,
         max_y: 0.0,
     });
 
@@ -209,7 +213,6 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
             None => memory_values.push(0.0),
         }
     }
-    // TODO the first memory value is 0, even when the history is full
 
     let x_values = build_x_values(memory_values.len());
     ChartContext {
@@ -225,6 +228,7 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
         x_label: "Seconds ago".to_string(),
         y_label: "Usage (MB)".to_string(),
         x_values,
+        min_y: 0.0,
         max_y: memory_total_mb as f32,
     }
 }

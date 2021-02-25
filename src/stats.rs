@@ -1,5 +1,6 @@
 use std::{io::Error, thread};
 
+use chrono::{DateTime, Local};
 use serde::Serialize;
 use systemstat::{
     saturating_sub_bytes, ByteSize, Duration, IpAddr, NetworkAddrs, Platform, System,
@@ -21,6 +22,8 @@ pub struct AllStats {
     pub filesystems: Option<Vec<MountStats>>,
     /// Network stats
     pub network: NetworkStats,
+    /// The time at which the stats were collected
+    pub collection_time: DateTime<Local>,
 }
 
 impl AllStats {
@@ -35,6 +38,7 @@ impl AllStats {
             memory: MemoryStats::from(&sys),
             filesystems: MountStats::from(&sys),
             network: NetworkStats::from(&sys),
+            collection_time: Local::now(),
         }
     }
 }
