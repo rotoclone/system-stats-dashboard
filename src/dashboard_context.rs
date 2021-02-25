@@ -186,7 +186,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         datasets: vec![DatasetContext {
             name: "Celsius".to_string(),
             line_color_code: "#000000".to_string(),
-            fill_color_code: "#aa000099".to_string(),
+            fill_color_code: "#99000099".to_string(),
             values: temp_values,
             fill: true,
         }],
