@@ -2,9 +2,7 @@ use std::convert::TryInto;
 
 use serde::Serialize;
 
-use crate::{
-    stats::GeneralStats, stats_history::StatsHistory, STATS_HISTORY_SIZE, STATS_UPDATE_FREQUENCY,
-};
+use crate::{stats::GeneralStats, stats_history::StatsHistory, STATS_UPDATE_FREQUENCY};
 
 #[derive(Serialize)]
 pub struct DashboardContext {
@@ -114,8 +112,6 @@ fn build_general_section(stats: &GeneralStats) -> Option<DashboardSectionContext
 }
 
 fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
-    let x_values: Vec<String> = build_x_values();
-
     let mut charts = Vec::new();
     let mut cpu_datasets = Vec::new();
     let mut aggregate_values = Vec::new();
@@ -133,8 +129,8 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         );
         temp_values.push(stats.cpu.temp_celsius.unwrap_or(0.0));
     }
-    pad_vec(&mut aggregate_values, 0.0, x_values.len());
-    pad_vec(&mut temp_values, 0.0, x_values.len());
+
+    let usage_x_values = build_x_values(aggregate_values.len());
 
     cpu_datasets.push(DatasetContext {
         name: "Aggregate".to_string(),
@@ -159,8 +155,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         }
     }
 
-    for (i, mut values) in per_logical_cpu_values_flipped.into_iter().enumerate() {
-        pad_vec(&mut values, 0.0, x_values.len());
+    for (i, values) in per_logical_cpu_values_flipped.into_iter().enumerate() {
         cpu_datasets.push(DatasetContext {
             name: format!("CPU {}", i),
             line_color_code: "#00000044".to_string(),
@@ -176,10 +171,11 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         datasets: cpu_datasets,
         x_label: "Seconds ago".to_string(),
         y_label: "Usage (%)".to_string(),
-        x_values: x_values.clone(),
+        x_values: usage_x_values,
         max_y: 100.0,
     });
 
+    let temp_x_values = build_x_values(temp_values.len());
     charts.push(ChartContext {
         id: "cpu-temp-chart".to_string(),
         title: "Temperature".to_string(),
@@ -192,7 +188,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         }],
         x_label: "Seconds ago".to_string(),
         y_label: "Temperature (C)".to_string(),
-        x_values,
+        x_values: temp_x_values,
         max_y: 0.0,
     });
 
@@ -200,8 +196,6 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
 }
 
 fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
-    let x_values: Vec<String> = build_x_values();
-
     let mut memory_values = Vec::new();
     let mut memory_total_mb = 0;
     for stats in stats_history.into_iter() {
@@ -216,8 +210,8 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
         }
     }
     // TODO the first memory value is 0, even when the history is full
-    pad_vec(&mut memory_values, 0.0, x_values.len());
 
+    let x_values = build_x_values(memory_values.len());
     ChartContext {
         id: "ram-chart".to_string(),
         title: "Memory Usage".to_string(),
@@ -235,17 +229,11 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
     }
 }
 
-fn build_x_values() -> Vec<String> {
+fn build_x_values(limit: usize) -> Vec<String> {
     let stats_update_seconds = STATS_UPDATE_FREQUENCY.as_secs().try_into().unwrap();
-    (0..=(STATS_HISTORY_SIZE * stats_update_seconds) - stats_update_seconds)
+    (0..=(limit * stats_update_seconds) - stats_update_seconds)
         .rev()
         .step_by(stats_update_seconds)
         .map(|x| x.to_string())
         .collect()
-}
-
-fn pad_vec<T: Copy>(vec: &mut Vec<T>, pad_value: T, target_size: usize) {
-    while vec.len() < target_size {
-        vec.insert(0, pad_value);
-    }
 }
