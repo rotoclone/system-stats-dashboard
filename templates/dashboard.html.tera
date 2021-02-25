@@ -43,6 +43,10 @@
                     xAxes: [
                         {
                             display: true,
+                            ticks: {
+                                maxRotation: 0,
+                                maxTicksLimit: 8
+                            },
                             scaleLabel: {
                                 display: true,
                                 labelString: "{{ chart.x_label }}"
