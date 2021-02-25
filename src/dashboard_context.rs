@@ -118,11 +118,12 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
 
     let mut charts = Vec::new();
     let mut cpu_datasets = Vec::new();
-    let mut aggregate_cpu_values = Vec::new();
+    let mut aggregate_values = Vec::new();
     let mut per_logical_cpu_values = Vec::new();
+    let mut temp_values = Vec::new();
     let empty_vec = Vec::new();
     for stats in stats_history.into_iter() {
-        aggregate_cpu_values.push(stats.cpu.aggregate_load_percent.unwrap_or(0.0));
+        aggregate_values.push(stats.cpu.aggregate_load_percent.unwrap_or(0.0));
         per_logical_cpu_values.push(
             stats
                 .cpu
@@ -130,14 +131,16 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
                 .as_ref()
                 .unwrap_or(&empty_vec),
         );
+        temp_values.push(stats.cpu.temp_celsius.unwrap_or(0.0));
     }
-    pad_vec(&mut aggregate_cpu_values, 0.0, x_values.len());
+    pad_vec(&mut aggregate_values, 0.0, x_values.len());
+    pad_vec(&mut temp_values, 0.0, x_values.len());
 
     cpu_datasets.push(DatasetContext {
-        name: "Aggregate %".to_string(),
+        name: "Aggregate".to_string(),
         line_color_code: "#000000".to_string(),
         fill_color_code: "#00995599".to_string(),
-        values: aggregate_cpu_values,
+        values: aggregate_values,
         fill: true,
     });
 
@@ -159,7 +162,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     for (i, mut values) in per_logical_cpu_values_flipped.into_iter().enumerate() {
         pad_vec(&mut values, 0.0, x_values.len());
         cpu_datasets.push(DatasetContext {
-            name: format!("CPU {} %", i),
+            name: format!("CPU {}", i),
             line_color_code: "#00000044".to_string(),
             fill_color_code: "".to_string(),
             values,
@@ -168,13 +171,29 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     }
 
     charts.push(ChartContext {
-        id: "cpu-chart".to_string(),
+        id: "cpu-usage-chart".to_string(),
         title: "CPU Usage".to_string(),
         datasets: cpu_datasets,
         x_label: "Seconds ago".to_string(),
         y_label: "Usage (%)".to_string(),
-        x_values,
+        x_values: x_values.clone(),
         max_y: 100.0,
+    });
+
+    charts.push(ChartContext {
+        id: "cpu-temp-chart".to_string(),
+        title: "Temperature".to_string(),
+        datasets: vec![DatasetContext {
+            name: "Celsius".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: "#aa000099".to_string(),
+            values: temp_values,
+            fill: true,
+        }],
+        x_label: "Seconds ago".to_string(),
+        y_label: "Temperature (C)".to_string(),
+        x_values,
+        max_y: 0.0,
     });
 
     charts
@@ -196,6 +215,7 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
             None => memory_values.push(0.0),
         }
     }
+    // TODO the first memory value is 0, even when the history is full
     pad_vec(&mut memory_values, 0.0, x_values.len());
 
     ChartContext {
