@@ -25,7 +25,7 @@
                             borderColor: "{{ dataset.line_color_code }}",
                             backgroundColor: "{{ dataset.fill_color_code }}",
                             lineTension: 0.25,
-                            data: {{ dataset.values | json_encode() | safe }},
+                            data: {{ dataset.values | json_encode() | safe }}.map(x => Math.round((x + Number.EPSILON) * 100) / 100),
                             fill: {{ dataset.fill }}
                         },{% endfor %}]
             };

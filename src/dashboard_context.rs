@@ -266,5 +266,5 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
 }
 
 fn format_time(time: DateTime<Local>) -> String {
-    time.format("%H:%M:%S").to_string()
+    time.format("%I:%M:%S %p").to_string()
 }
