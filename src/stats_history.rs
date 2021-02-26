@@ -20,8 +20,8 @@ impl UpdatingStatsHistory {
     /// Creates an `UpdatingStatsHistory`.
     /// # Params
     /// * `system` - The system to gather stats from.
-    /// * `cpu_sample_duration` - The amount of time to take to sample CPU load.
-    /// * `update_frequency` - How often new stats should be gathered.
+    /// * `cpu_sample_duration` - The amount of time to take to sample CPU load. Must be less than `update_frequency`.
+    /// * `update_frequency` - How often new stats should be gathered. Must be greater than `cpu_sample_duration`.
     /// * `stats_history` - The stats history to update.
     pub fn new(
         system: System,
@@ -38,7 +38,7 @@ impl UpdatingStatsHistory {
                 let mut history = update_thread_stats_history.lock().unwrap();
                 history.push(new_stats);
             }
-            thread::sleep(update_frequency);
+            thread::sleep(update_frequency - cpu_sample_duration);
         });
 
         UpdatingStatsHistory {
