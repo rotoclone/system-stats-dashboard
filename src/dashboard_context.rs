@@ -3,6 +3,10 @@ use serde::Serialize;
 
 use crate::{stats::GeneralStats, stats_history::StatsHistory};
 
+const CPU_FILL_COLOR: &str = "#ffcc0099"; // yellow
+const TEMPERATURE_FILL_COLOR: &str = "#99000099"; // red
+const MEM_FILL_COLOR: &str = "#0055ff99"; // blue
+
 #[derive(Serialize)]
 pub struct DashboardContext {
     title: String,
@@ -142,7 +146,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     cpu_datasets.push(DatasetContext {
         name: "Aggregate".to_string(),
         line_color_code: "#000000".to_string(),
-        fill_color_code: "#00995599".to_string(),
+        fill_color_code: CPU_FILL_COLOR.to_string(),
         values: aggregate_values,
         fill: true,
     });
@@ -192,7 +196,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         datasets: vec![DatasetContext {
             name: "Celsius".to_string(),
             line_color_code: "#000000".to_string(),
-            fill_color_code: "#99000099".to_string(),
+            fill_color_code: TEMPERATURE_FILL_COLOR.to_string(),
             values: temp_values,
             fill: true,
         }],
@@ -231,13 +235,13 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
                 Some(mem) => {
                     let used_pct = ((mem.used_mb as f64) / (mem.total_mb as f64)) * 100.0;
                     (
-                        format!("{}/{} MB", mem.used_mb, mem.total_mb),
+                        format!("{} / {} MB", mem.used_mb, mem.total_mb),
                         format!("{:.2}%", used_pct),
                     )
                 }
-                None => ("--/-- MB".to_string(), "--%".to_string()),
+                None => ("-- / -- MB".to_string(), "--%".to_string()),
             },
-            None => ("--/-- MB".to_string(), "--%".to_string()),
+            None => ("-- / -- MB".to_string(), "--%".to_string()),
         }
     };
 
@@ -247,7 +251,7 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
         datasets: vec![DatasetContext {
             name: "MB Used".to_string(),
             line_color_code: "#000000".to_string(),
-            fill_color_code: "#0055ff99".to_string(),
+            fill_color_code: MEM_FILL_COLOR.to_string(),
             values: memory_values,
             fill: true,
         }],
