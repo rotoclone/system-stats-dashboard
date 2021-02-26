@@ -4,7 +4,6 @@
         <meta charset="utf-8"/>
         <title>{{ title }}</title>
     </head>
-    <body>
-        {% block content %}{% endblock content %}
-    </body>
-</html>
+    <body style="font-family:sans-serif;"> {% block content %}{% endblock content %}
+        </body>
+    </html>

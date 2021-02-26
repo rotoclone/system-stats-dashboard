@@ -28,6 +28,10 @@ struct ChartContext {
     min_y: f32,
     /// The highest possible Y value expected for this chart.
     max_y: f32,
+    /// First line of text to diplay beside the chart.
+    accompanying_text_1: String,
+    /// Second line of text to diplay beside the chart.
+    accompanying_text_2: String,
 }
 
 #[derive(Serialize)]
@@ -133,6 +137,8 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         x_values.push(format_time(stats.collection_time));
     }
 
+    let usage_accompanying_text = format!("{:.2}%", aggregate_values.last().unwrap_or(&0.0));
+
     cpu_datasets.push(DatasetContext {
         name: "Aggregate".to_string(),
         line_color_code: "#000000".to_string(),
@@ -175,8 +181,11 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         x_values: x_values.clone(),
         min_y: 0.0,
         max_y: 100.0,
+        accompanying_text_1: usage_accompanying_text,
+        accompanying_text_2: "".to_string(),
     });
 
+    let temp_accompanying_text = format!("{:.2}°C", temp_values.last().unwrap_or(&0.0));
     charts.push(ChartContext {
         id: "cpu-temp-chart".to_string(),
         title: "Temperature".to_string(),
@@ -192,6 +201,8 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         x_values,
         min_y: 0.0,
         max_y: 85.0,
+        accompanying_text_1: temp_accompanying_text,
+        accompanying_text_2: "".to_string(),
     });
 
     charts
@@ -214,6 +225,22 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
         x_values.push(format_time(stats.collection_time));
     }
 
+    let (accompanying_text_1, accompanying_text_2) = {
+        match stats_history.get_most_recent_stats() {
+            Some(x) => match &x.memory {
+                Some(mem) => {
+                    let used_pct = ((mem.used_mb as f64) / (mem.total_mb as f64)) * 100.0;
+                    (
+                        format!("{}/{} MB", mem.used_mb, mem.total_mb),
+                        format!("{:.2}%", used_pct),
+                    )
+                }
+                None => ("--/-- MB".to_string(), "--%".to_string()),
+            },
+            None => ("--/-- MB".to_string(), "--%".to_string()),
+        }
+    };
+
     ChartContext {
         id: "ram-chart".to_string(),
         title: "Memory Usage".to_string(),
@@ -229,9 +256,11 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
         x_values,
         min_y: 0.0,
         max_y: memory_total_mb as f32,
+        accompanying_text_1,
+        accompanying_text_2,
     }
 }
 
 fn format_time(time: DateTime<Local>) -> String {
-    time.format("%Y-%m-%d %H:%M:%S").to_string()
+    time.format("%H:%M:%S").to_string()
 }
