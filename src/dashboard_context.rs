@@ -3,17 +3,36 @@ use serde::Serialize;
 
 use crate::{stats::GeneralStats, stats_history::StatsHistory};
 
-const CPU_FILL_COLOR: &str = "#ffcc0099"; // yellow
+const CPU_PER_LOGICAL_CPU_LINE_COLOR: &str = "#00000044"; // gray
+const CPU_AGGREGATE_LINE_COLOR: &str = "#ffcc00"; // yellow
+const CPU_AGGREGATE_FILL_COLOR: &str = "#ffcc0099"; // yellow
+
+const TEMPERATURE_LINE_COLOR: &str = "#990000"; // red
 const TEMPERATURE_FILL_COLOR: &str = "#99000099"; // red
+
+const MEM_LINE_COLOR: &str = "#0055ff"; // blue
 const MEM_FILL_COLOR: &str = "#0055ff99"; // blue
+
+const SENT_LINE_COLOR: &str = "#44eeaa"; // blue-green
 const SENT_FILL_COLOR: &str = "#44eeaa99"; // blue-green
+const RECEIVED_LINE_COLOR: &str = "#44ee77"; // green
 const RECEIVED_FILL_COLOR: &str = "#44ee7799"; // green
+
+const SEND_ERRORS_LINE_COLOR: &str = "#ff8800"; // yellow-orange
 const SEND_ERRORS_FILL_COLOR: &str = "#ff880099"; // yellow-orange
+const RECEIVE_ERRORS_LINE_COLOR: &str = "#ff6600"; // orange
 const RECEIVE_ERRORS_FILL_COLOR: &str = "#ff660099"; // orange
+
+const TCP_LINE_COLOR: &str = "#44eedd"; // teal
 const TCP_FILL_COLOR: &str = "#44eedd99"; // teal
+const UDP_LINE_COLOR: &str = "#44bbdd"; // light blue
 const UDP_FILL_COLOR: &str = "#44bbdd99"; // light blue
+
+const LOAD_AVERAGE_1_LINE_COLOR: &str = "#ff00ff"; // pink
 const LOAD_AVERAGE_1_FILL_COLOR: &str = "#ff00ff99"; // pink
+const LOAD_AVERAGE_5_LINE_COLOR: &str = "#bb00ff"; // purple
 const LOAD_AVERAGE_5_FILL_COLOR: &str = "#bb00ff99"; // purple
+const LOAD_AVERAGE_15_LINE_COLOR: &str = "#7700ff"; // dark purple
 const LOAD_AVERAGE_15_FILL_COLOR: &str = "#7700ff99"; // dark purple
 
 #[derive(Serialize)]
@@ -155,8 +174,8 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
 
     cpu_datasets.push(DatasetContext {
         name: "Aggregate".to_string(),
-        line_color_code: "#000000".to_string(),
-        fill_color_code: CPU_FILL_COLOR.to_string(),
+        line_color_code: CPU_AGGREGATE_LINE_COLOR.to_string(),
+        fill_color_code: CPU_AGGREGATE_FILL_COLOR.to_string(),
         values: aggregate_values,
         fill: true,
     });
@@ -179,7 +198,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     for (i, values) in per_logical_cpu_values_flipped.into_iter().enumerate() {
         cpu_datasets.push(DatasetContext {
             name: format!("CPU {}", i),
-            line_color_code: "#00000044".to_string(),
+            line_color_code: CPU_PER_LOGICAL_CPU_LINE_COLOR.to_string(),
             fill_color_code: "".to_string(),
             values,
             fill: false,
@@ -205,7 +224,7 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         title: "Temperature".to_string(),
         datasets: vec![DatasetContext {
             name: "Celsius".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: TEMPERATURE_LINE_COLOR.to_string(),
             fill_color_code: TEMPERATURE_FILL_COLOR.to_string(),
             values: temp_values,
             fill: true,
@@ -260,7 +279,7 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
         title: "Memory Usage".to_string(),
         datasets: vec![DatasetContext {
             name: "MB Used".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: MEM_LINE_COLOR.to_string(),
             fill_color_code: MEM_FILL_COLOR.to_string(),
             values: memory_values,
             fill: true,
@@ -306,21 +325,21 @@ fn build_load_average_chart(stats_history: &StatsHistory) -> ChartContext {
     let datasets = vec![
         DatasetContext {
             name: "1 minute".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: LOAD_AVERAGE_1_LINE_COLOR.to_string(),
             fill_color_code: LOAD_AVERAGE_1_FILL_COLOR.to_string(),
             values: one_min_values,
             fill: true,
         },
         DatasetContext {
             name: "5 minutes".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: LOAD_AVERAGE_5_LINE_COLOR.to_string(),
             fill_color_code: LOAD_AVERAGE_5_FILL_COLOR.to_string(),
             values: five_min_values,
             fill: true,
         },
         DatasetContext {
             name: "15 minutes".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: LOAD_AVERAGE_15_LINE_COLOR.to_string(),
             fill_color_code: LOAD_AVERAGE_15_FILL_COLOR.to_string(),
             values: fifteen_min_values,
             fill: true,
@@ -400,14 +419,14 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     let usage_datasets = vec![
         DatasetContext {
             name: "Sent".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: SENT_LINE_COLOR.to_string(),
             fill_color_code: SENT_FILL_COLOR.to_string(),
             values: sent_mb_values,
             fill: true,
         },
         DatasetContext {
             name: "Received".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: RECEIVED_LINE_COLOR.to_string(),
             fill_color_code: RECEIVED_FILL_COLOR.to_string(),
             values: received_mb_values,
             fill: true,
@@ -435,14 +454,14 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     let errors_datasets = vec![
         DatasetContext {
             name: "Send".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: SEND_ERRORS_LINE_COLOR.to_string(),
             fill_color_code: SEND_ERRORS_FILL_COLOR.to_string(),
             values: send_errors_values,
             fill: true,
         },
         DatasetContext {
             name: "Receive".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: RECEIVE_ERRORS_LINE_COLOR.to_string(),
             fill_color_code: RECEIVE_ERRORS_FILL_COLOR.to_string(),
             values: receive_errors_values,
             fill: true,
@@ -470,14 +489,14 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     let sockets_datasets = vec![
         DatasetContext {
             name: "TCP".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: TCP_LINE_COLOR.to_string(),
             fill_color_code: TCP_FILL_COLOR.to_string(),
             values: tcp_sockets_values,
             fill: true,
         },
         DatasetContext {
             name: "UDP".to_string(),
-            line_color_code: "#000000".to_string(),
+            line_color_code: UDP_LINE_COLOR.to_string(),
             fill_color_code: UDP_FILL_COLOR.to_string(),
             values: udp_sockets_values,
             fill: true,
