@@ -271,8 +271,8 @@ fn build_load_average_chart(stats_history: &StatsHistory) -> ChartContext {
 }
 
 fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
-    let mut sent_bytes_values = Vec::new();
-    let mut received_bytes_values = Vec::new();
+    let mut sent_mb_values = Vec::new();
+    let mut received_mb_values = Vec::new();
     let mut send_errors_values = Vec::new();
     let mut receive_errors_values = Vec::new();
     let mut tcp_sockets_values = Vec::new();
@@ -281,25 +281,25 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     for stats in stats_history.into_iter() {
         match &stats.network.interfaces {
             Some(x) => {
-                let mut total_sent_bytes = 0.0;
-                let mut total_received_bytes = 0.0;
+                let mut total_sent_mb = 0.0;
+                let mut total_received_mb = 0.0;
                 let mut total_send_errors = 0.0;
                 let mut total_receive_errors = 0.0;
                 for interface_stats in x {
-                    total_sent_bytes += interface_stats.sent_bytes as f32;
-                    total_received_bytes += interface_stats.received_bytes as f32;
+                    total_sent_mb += interface_stats.sent_mb as f32;
+                    total_received_mb += interface_stats.received_mb as f32;
                     total_send_errors += interface_stats.send_errors as f32;
                     total_receive_errors += interface_stats.receive_errors as f32;
                 }
 
-                sent_bytes_values.push(total_sent_bytes);
-                received_bytes_values.push(total_received_bytes);
+                sent_mb_values.push(total_sent_mb);
+                received_mb_values.push(total_received_mb);
                 send_errors_values.push(total_send_errors);
                 receive_errors_values.push(total_receive_errors);
             }
             None => {
-                sent_bytes_values.push(0.0);
-                received_bytes_values.push(0.0);
+                sent_mb_values.push(0.0);
+                received_mb_values.push(0.0);
                 send_errors_values.push(0.0);
                 receive_errors_values.push(0.0);
             }
@@ -322,23 +322,23 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     let mut charts = Vec::new();
 
     let usage_accompanying_text = format!(
-        "{} B sent, {} B received",
-        sent_bytes_values.last().unwrap_or(&0.0),
-        received_bytes_values.last().unwrap_or(&0.0)
+        "{} MB sent, {} MB received",
+        sent_mb_values.last().unwrap_or(&0.0),
+        received_mb_values.last().unwrap_or(&0.0)
     );
     let usage_datasets = vec![
         DatasetContext {
-            name: "Sent bytes".to_string(),
+            name: "Sent".to_string(),
             line_color_code: "#00000066".to_string(),
             fill_color_code: "#000000".to_string(),
-            values: sent_bytes_values,
+            values: sent_mb_values,
             fill: true,
         },
         DatasetContext {
-            name: "Received bytes".to_string(),
+            name: "Received".to_string(),
             line_color_code: "#00000066".to_string(),
             fill_color_code: "#000000".to_string(),
-            values: received_bytes_values,
+            values: received_mb_values,
             fill: true,
         },
     ];
@@ -348,7 +348,7 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         title: "Cumulative Network Usage".to_string(),
         datasets: usage_datasets,
         x_label: "Time".to_string(),
-        y_label: "Total bytes".to_string(),
+        y_label: "Total (MB)".to_string(),
         x_values: x_values.clone(),
         min_y: 0.0,
         max_y: 0.0,
@@ -363,14 +363,14 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     );
     let errors_datasets = vec![
         DatasetContext {
-            name: "Send errors".to_string(),
+            name: "Send".to_string(),
             line_color_code: "#00000066".to_string(),
             fill_color_code: "#000000".to_string(),
             values: send_errors_values,
             fill: true,
         },
         DatasetContext {
-            name: "Receive errors".to_string(),
+            name: "Receive".to_string(),
             line_color_code: "#00000066".to_string(),
             fill_color_code: "#000000".to_string(),
             values: receive_errors_values,

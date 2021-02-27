@@ -275,10 +275,10 @@ pub struct NetworkInterfaceStats {
     pub name: String,
     /// IP addresses associated with this interface
     pub addresses: Vec<String>,
-    /// Total bytes sent via this interface
-    pub sent_bytes: u64,
-    /// Total bytes received via this interface
-    pub received_bytes: u64,
+    /// Total megabytes sent via this interface
+    pub sent_mb: u64,
+    /// Total megabytes received via this interface
+    pub received_mb: u64,
     /// Total packets sent via this interface
     pub sent_packets: u64,
     /// Total packets received via this interface
@@ -306,8 +306,8 @@ impl NetworkInterfaceStats {
                             Some(NetworkInterfaceStats {
                                 name: interface.name,
                                 addresses,
-                                sent_bytes: stats.tx_bytes.as_u64(),
-                                received_bytes: stats.rx_bytes.as_u64(),
+                                sent_mb: bytes_to_mb(stats.tx_bytes),
+                                received_mb: bytes_to_mb(stats.rx_bytes),
                                 sent_packets: stats.tx_packets,
                                 received_packets: stats.rx_packets,
                                 send_errors: stats.tx_errors,
