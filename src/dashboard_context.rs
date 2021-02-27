@@ -10,6 +10,8 @@ const SENT_FILL_COLOR: &str = "#44eeaa99"; // blue-green
 const RECEIVED_FILL_COLOR: &str = "#44ee7799"; // green
 const SEND_ERRORS_FILL_COLOR: &str = "#ff880099"; // yellow-orange
 const RECEIVE_ERRORS_FILL_COLOR: &str = "#ff660099"; // orange
+const TCP_FILL_COLOR: &str = "#44eedd99"; // teal
+const UDP_FILL_COLOR: &str = "#44bbdd99"; // light blue
 const LOAD_AVERAGE_5_FILL_COLOR: &str = "#cc44ee99"; // purple
 const LOAD_AVERAGE_10_FILL_COLOR: &str = "#cc448899"; // red-purple
 const LOAD_AVERAGE_15_FILL_COLOR: &str = "#cc448899"; // red-purple
@@ -391,14 +393,49 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         datasets: errors_datasets,
         x_label: "Time".to_string(),
         y_label: "Total errors".to_string(),
-        x_values,
+        x_values: x_values.clone(),
         min_y: 0.0,
         max_y: 0.0,
         accompanying_text_1: errors_accompanying_text,
         accompanying_text_2: "".to_string(),
     });
 
-    //TODO ports chart
+    let sockets_accompanying_text = format!(
+        "{} TCP, {} UDP",
+        tcp_sockets_values.last().unwrap_or(&0.0),
+        udp_sockets_values.last().unwrap_or(&0.0)
+    );
+    let sockets_datasets = vec![
+        DatasetContext {
+            name: "TCP".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: TCP_FILL_COLOR.to_string(),
+            values: tcp_sockets_values,
+            fill: true,
+        },
+        DatasetContext {
+            name: "UDP".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: UDP_FILL_COLOR.to_string(),
+            values: udp_sockets_values,
+            fill: true,
+        },
+    ];
+
+    charts.push(ChartContext {
+        id: "sockets-chart".to_string(),
+        title: "Socket Usage".to_string(),
+        datasets: sockets_datasets,
+        x_label: "Time".to_string(),
+        y_label: "Sockets".to_string(),
+        x_values,
+        min_y: 0.0,
+        max_y: 0.0,
+        accompanying_text_1: sockets_accompanying_text,
+        accompanying_text_2: "".to_string(),
+    });
+
+    //TODO sockets chart
 
     charts
 }
