@@ -6,6 +6,10 @@ use crate::{stats::GeneralStats, stats_history::StatsHistory};
 const CPU_FILL_COLOR: &str = "#ffcc0099"; // yellow
 const TEMPERATURE_FILL_COLOR: &str = "#99000099"; // red
 const MEM_FILL_COLOR: &str = "#0055ff99"; // blue
+const SENT_FILL_COLOR: &str = "#44eeaa99"; // blue-green
+const RECEIVED_FILL_COLOR: &str = "#44ee7799"; // green
+const SEND_ERRORS_FILL_COLOR: &str = "#cc44ee99"; // purple
+const RECEIVE_ERRORS_FILL_COLOR: &str = "#cc448899"; // red-purple
 
 #[derive(Serialize)]
 pub struct DashboardContext {
@@ -329,15 +333,15 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     let usage_datasets = vec![
         DatasetContext {
             name: "Sent".to_string(),
-            line_color_code: "#00000066".to_string(),
-            fill_color_code: "#000000".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: SENT_FILL_COLOR.to_string(),
             values: sent_mb_values,
             fill: true,
         },
         DatasetContext {
             name: "Received".to_string(),
-            line_color_code: "#00000066".to_string(),
-            fill_color_code: "#000000".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: RECEIVED_FILL_COLOR.to_string(),
             values: received_mb_values,
             fill: true,
         },
@@ -364,15 +368,15 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     let errors_datasets = vec![
         DatasetContext {
             name: "Send".to_string(),
-            line_color_code: "#00000066".to_string(),
-            fill_color_code: "#000000".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: SEND_ERRORS_FILL_COLOR.to_string(),
             values: send_errors_values,
             fill: true,
         },
         DatasetContext {
             name: "Receive".to_string(),
-            line_color_code: "#00000066".to_string(),
-            fill_color_code: "#000000".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: RECEIVE_ERRORS_FILL_COLOR.to_string(),
             values: receive_errors_values,
             fill: true,
         },
