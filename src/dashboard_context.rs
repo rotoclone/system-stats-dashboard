@@ -364,7 +364,7 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
     });
 
     let errors_accompanying_text = format!(
-        "{} send errors, {} receive errors",
+        "{} send, {} receive",
         send_errors_values.last().unwrap_or(&0.0),
         receive_errors_values.last().unwrap_or(&0.0)
     );
