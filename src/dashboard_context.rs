@@ -8,8 +8,11 @@ const TEMPERATURE_FILL_COLOR: &str = "#99000099"; // red
 const MEM_FILL_COLOR: &str = "#0055ff99"; // blue
 const SENT_FILL_COLOR: &str = "#44eeaa99"; // blue-green
 const RECEIVED_FILL_COLOR: &str = "#44ee7799"; // green
-const SEND_ERRORS_FILL_COLOR: &str = "#cc44ee99"; // purple
-const RECEIVE_ERRORS_FILL_COLOR: &str = "#cc448899"; // red-purple
+const SEND_ERRORS_FILL_COLOR: &str = "#ff880099"; // yellow-orange
+const RECEIVE_ERRORS_FILL_COLOR: &str = "#ff660099"; // orange
+const LOAD_AVERAGE_5_FILL_COLOR: &str = "#cc44ee99"; // purple
+const LOAD_AVERAGE_10_FILL_COLOR: &str = "#cc448899"; // red-purple
+const LOAD_AVERAGE_15_FILL_COLOR: &str = "#cc448899"; // red-purple
 
 #[derive(Serialize)]
 pub struct DashboardContext {
