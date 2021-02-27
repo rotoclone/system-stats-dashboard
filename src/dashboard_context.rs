@@ -93,7 +93,8 @@ impl DashboardContext {
         let mut charts = Vec::new();
         charts.extend(build_cpu_charts(stats_history));
         charts.push(build_memory_chart(stats_history));
-        //TODO more charts
+        //TODO charts.push(build_load_average_chart(stats_history));
+        charts.extend(build_network_charts(stats_history));
 
         DashboardContext {
             title,
@@ -263,6 +264,136 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
         accompanying_text_1,
         accompanying_text_2,
     }
+}
+
+fn build_load_average_chart(stats_history: &StatsHistory) -> ChartContext {
+    unimplemented!() //TODO
+}
+
+fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
+    let mut sent_bytes_values = Vec::new();
+    let mut received_bytes_values = Vec::new();
+    let mut send_errors_values = Vec::new();
+    let mut receive_errors_values = Vec::new();
+    let mut tcp_sockets_values = Vec::new();
+    let mut udp_sockets_values = Vec::new();
+    let mut x_values = Vec::new();
+    for stats in stats_history.into_iter() {
+        match &stats.network.interfaces {
+            Some(x) => {
+                let mut total_sent_bytes = 0.0;
+                let mut total_received_bytes = 0.0;
+                let mut total_send_errors = 0.0;
+                let mut total_receive_errors = 0.0;
+                for interface_stats in x {
+                    total_sent_bytes += interface_stats.sent_bytes as f32;
+                    total_received_bytes += interface_stats.received_bytes as f32;
+                    total_send_errors += interface_stats.send_errors as f32;
+                    total_receive_errors += interface_stats.receive_errors as f32;
+                }
+
+                sent_bytes_values.push(total_sent_bytes);
+                received_bytes_values.push(total_received_bytes);
+                send_errors_values.push(total_send_errors);
+                receive_errors_values.push(total_receive_errors);
+            }
+            None => {
+                sent_bytes_values.push(0.0);
+                received_bytes_values.push(0.0);
+                send_errors_values.push(0.0);
+                receive_errors_values.push(0.0);
+            }
+        }
+
+        match &stats.network.sockets {
+            Some(x) => {
+                tcp_sockets_values.push(x.tcp_in_use as f32);
+                udp_sockets_values.push(x.udp_in_use as f32);
+            }
+            None => {
+                tcp_sockets_values.push(0.0);
+                udp_sockets_values.push(0.0);
+            }
+        }
+
+        x_values.push(format_time(stats.collection_time));
+    }
+
+    let mut charts = Vec::new();
+
+    let usage_accompanying_text = format!(
+        "{} B sent, {} B received",
+        sent_bytes_values.last().unwrap_or(&0.0),
+        received_bytes_values.last().unwrap_or(&0.0)
+    );
+    let usage_datasets = vec![
+        DatasetContext {
+            name: "Sent bytes".to_string(),
+            line_color_code: "#00000066".to_string(),
+            fill_color_code: "#000000".to_string(),
+            values: sent_bytes_values,
+            fill: true,
+        },
+        DatasetContext {
+            name: "Received bytes".to_string(),
+            line_color_code: "#00000066".to_string(),
+            fill_color_code: "#000000".to_string(),
+            values: received_bytes_values,
+            fill: true,
+        },
+    ];
+
+    charts.push(ChartContext {
+        id: "network-usage-chart".to_string(),
+        title: "Cumulative Network Usage".to_string(),
+        datasets: usage_datasets,
+        x_label: "Time".to_string(),
+        y_label: "Total bytes".to_string(),
+        x_values: x_values.clone(),
+        min_y: 0.0,
+        max_y: 0.0,
+        accompanying_text_1: usage_accompanying_text,
+        accompanying_text_2: "".to_string(),
+    });
+
+    let errors_accompanying_text = format!(
+        "{} send errors, {} receive errors",
+        send_errors_values.last().unwrap_or(&0.0),
+        receive_errors_values.last().unwrap_or(&0.0)
+    );
+    let errors_datasets = vec![
+        DatasetContext {
+            name: "Send errors".to_string(),
+            line_color_code: "#00000066".to_string(),
+            fill_color_code: "#000000".to_string(),
+            values: send_errors_values,
+            fill: true,
+        },
+        DatasetContext {
+            name: "Receive errors".to_string(),
+            line_color_code: "#00000066".to_string(),
+            fill_color_code: "#000000".to_string(),
+            values: receive_errors_values,
+            fill: true,
+        },
+    ];
+
+    charts.push(ChartContext {
+        id: "network-errors-chart".to_string(),
+        title: "Cumulative Network Errors".to_string(),
+        datasets: errors_datasets,
+        x_label: "Time".to_string(),
+        y_label: "Total errors".to_string(),
+        x_values,
+        min_y: 0.0,
+        max_y: 0.0,
+        accompanying_text_1: errors_accompanying_text,
+        accompanying_text_2: "".to_string(),
+    });
+
+    //TODO ports chart
+
+    charts
 }
 
 fn format_time(time: DateTime<Local>) -> String {

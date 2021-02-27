@@ -252,9 +252,9 @@ impl MountStats {
 #[serde(rename_all = "camelCase")]
 pub struct NetworkStats {
     /// Stats for network interfaces
-    interfaces: Option<Vec<NetworkInterfaceStats>>,
+    pub interfaces: Option<Vec<NetworkInterfaceStats>>,
     /// Stats for sockets
-    sockets: Option<SocketStats>,
+    pub sockets: Option<SocketStats>,
 }
 
 impl NetworkStats {
@@ -272,21 +272,21 @@ impl NetworkStats {
 #[serde(rename_all = "camelCase")]
 pub struct NetworkInterfaceStats {
     /// The name of the interface
-    name: String,
+    pub name: String,
     /// IP addresses associated with this interface
-    addresses: Vec<String>,
+    pub addresses: Vec<String>,
     /// Total bytes sent via this interface
-    sent_bytes: u64,
+    pub sent_bytes: u64,
     /// Total bytes received via this interface
-    received_bytes: u64,
+    pub received_bytes: u64,
     /// Total packets sent via this interface
-    sent_packets: u64,
+    pub sent_packets: u64,
     /// Total packets received via this interface
-    received_packets: u64,
+    pub received_packets: u64,
     /// Total number of errors that occured while sending data via this interface
-    send_errors: u64,
+    pub send_errors: u64,
     /// Total number of errors that occured while receiving data via this interface
-    receive_errors: u64,
+    pub receive_errors: u64,
 }
 
 impl NetworkInterfaceStats {
@@ -337,15 +337,15 @@ impl NetworkInterfaceStats {
 #[serde(rename_all = "camelCase")]
 pub struct SocketStats {
     /// Number of TCP sockets in use
-    tcp_in_use: usize,
+    pub tcp_in_use: usize,
     /// Number of orphaned TCP sockets
-    tcp_orphaned: usize,
+    pub tcp_orphaned: usize,
     /// Number of UDP sockets in use
-    udp_in_use: usize,
+    pub udp_in_use: usize,
     /// Number of IPv6 TCP sockets in use
-    tcp6_in_use: usize,
+    pub tcp6_in_use: usize,
     /// Number of IPv6 UDP sockets in use
-    udp6_in_use: usize,
+    pub udp6_in_use: usize,
 }
 
 impl SocketStats {
