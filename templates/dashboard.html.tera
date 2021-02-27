@@ -11,11 +11,9 @@
                 <canvas id="{{ chart.id }}"></canvas>
             </div>
             <div style="width:20%; align-self:center; text-align:center;">
-                <p style="font-size:2.0vw; color:#00000099;">{{ chart.title }}</p>
-                <br/>
-                <span style="font-size:2.2vw; font-weight:bold;">{{ chart.accompanying_text_1 }}</span>
-                <br/>
-                <span style="font-size:2.0vw;">{{ chart.accompanying_text_2 }}</span>
+                <p style="font-size:2.0vw; color:#00000099; margin-block-start:0.5em; margin-block-end:0.5em">{{ chart.title }}</p>
+                <p style="font-size:2.2vw; font-weight:bold; margin-block-start:0.5em; margin-block-end:0.5em">{{ chart.accompanying_text_1 }}</p>
+                <p style="font-size:2.0vw; margin-block-start:0.5em; margin-block-end:0.5em">{{ chart.accompanying_text_2 }}</p>
             </div>
         </div>
         <script>
