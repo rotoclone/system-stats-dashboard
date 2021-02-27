@@ -12,9 +12,9 @@ const SEND_ERRORS_FILL_COLOR: &str = "#ff880099"; // yellow-orange
 const RECEIVE_ERRORS_FILL_COLOR: &str = "#ff660099"; // orange
 const TCP_FILL_COLOR: &str = "#44eedd99"; // teal
 const UDP_FILL_COLOR: &str = "#44bbdd99"; // light blue
-const LOAD_AVERAGE_5_FILL_COLOR: &str = "#cc44ee99"; // purple
-const LOAD_AVERAGE_10_FILL_COLOR: &str = "#cc448899"; // red-purple
-const LOAD_AVERAGE_15_FILL_COLOR: &str = "#cc448899"; // red-purple
+const LOAD_AVERAGE_1_FILL_COLOR: &str = "#ff00ff99"; // pink
+const LOAD_AVERAGE_5_FILL_COLOR: &str = "#bb00ff99"; // purple
+const LOAD_AVERAGE_15_FILL_COLOR: &str = "#7700ff99"; // dark purple
 
 #[derive(Serialize)]
 pub struct DashboardContext {
@@ -102,7 +102,7 @@ impl DashboardContext {
         let mut charts = Vec::new();
         charts.extend(build_cpu_charts(stats_history));
         charts.push(build_memory_chart(stats_history));
-        //TODO charts.push(build_load_average_chart(stats_history));
+        charts.push(build_load_average_chart(stats_history));
         charts.extend(build_network_charts(stats_history));
 
         DashboardContext {
@@ -276,7 +276,69 @@ fn build_memory_chart(stats_history: &StatsHistory) -> ChartContext {
 }
 
 fn build_load_average_chart(stats_history: &StatsHistory) -> ChartContext {
-    unimplemented!() //TODO
+    let mut one_min_values = Vec::new();
+    let mut five_min_values = Vec::new();
+    let mut fifteen_min_values = Vec::new();
+    let mut x_values = Vec::new();
+    for stats in stats_history.into_iter() {
+        match &stats.general.load_averages {
+            Some(x) => {
+                one_min_values.push(x.one_minute);
+                five_min_values.push(x.five_minutes);
+                fifteen_min_values.push(x.fifteen_minutes);
+            }
+            None => {
+                one_min_values.push(0.0);
+                five_min_values.push(0.0);
+                fifteen_min_values.push(0.0);
+            }
+        }
+
+        x_values.push(format_time(stats.collection_time));
+    }
+
+    let accompanying_text = format!(
+        "1: {}, 5: {}, 15: {}",
+        one_min_values.last().unwrap_or(&0.0),
+        five_min_values.last().unwrap_or(&0.0),
+        fifteen_min_values.last().unwrap_or(&0.0)
+    );
+    let datasets = vec![
+        DatasetContext {
+            name: "1 minute".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: LOAD_AVERAGE_1_FILL_COLOR.to_string(),
+            values: one_min_values,
+            fill: true,
+        },
+        DatasetContext {
+            name: "5 minutes".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: LOAD_AVERAGE_5_FILL_COLOR.to_string(),
+            values: five_min_values,
+            fill: true,
+        },
+        DatasetContext {
+            name: "15 minutes".to_string(),
+            line_color_code: "#000000".to_string(),
+            fill_color_code: LOAD_AVERAGE_15_FILL_COLOR.to_string(),
+            values: fifteen_min_values,
+            fill: true,
+        },
+    ];
+
+    ChartContext {
+        id: "load-average-chart".to_string(),
+        title: "Load Averages".to_string(),
+        datasets,
+        x_label: "Time".to_string(),
+        y_label: "Load average".to_string(),
+        x_values,
+        min_y: 0.0,
+        max_y: 0.0,
+        accompanying_text_1: accompanying_text,
+        accompanying_text_2: "".to_string(),
+    }
 }
 
 fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
@@ -434,8 +496,6 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         accompanying_text_1: sockets_accompanying_text,
         accompanying_text_2: "".to_string(),
     });
-
-    //TODO sockets chart
 
     charts
 }

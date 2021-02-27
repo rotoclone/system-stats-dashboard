@@ -60,11 +60,11 @@ pub struct GeneralStats {
 #[serde(rename_all = "camelCase")]
 pub struct LoadAverages {
     /// Load average over the last minute
-    one_minute: f32,
+    pub one_minute: f32,
     /// Load average over the last 5 minutes
-    five_minutes: f32,
+    pub five_minutes: f32,
     /// Load average over the last 15 minutes
-    fifteen_minutes: f32,
+    pub fifteen_minutes: f32,
 }
 
 impl GeneralStats {
