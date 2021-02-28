@@ -116,5 +116,5 @@
             </div>
         {% endfor %}
     {% endfor %}
-    <p>Last updated: {{ last_update_time }}</p>
+    <p style="color:{{ text_color }}88;">Last updated: {{ last_update_time }}</p>
 {% endblock content %}

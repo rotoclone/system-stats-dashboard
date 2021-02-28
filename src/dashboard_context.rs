@@ -19,13 +19,13 @@ const MEM_FILL_COLOR: &str = "#0055ff99"; // blue
 
 const SENT_LINE_COLOR: &str = "#44eeaa"; // blue-green
 const SENT_FILL_COLOR: &str = "#44eeaa99"; // blue-green
-const RECEIVED_LINE_COLOR: &str = "#44ee77"; // green
-const RECEIVED_FILL_COLOR: &str = "#44ee7799"; // green
+const RECEIVED_LINE_COLOR: &str = "#44dd22"; // green
+const RECEIVED_FILL_COLOR: &str = "#44dd2299"; // green
 
 const SEND_ERRORS_LINE_COLOR: &str = "#ff8800"; // yellow-orange
 const SEND_ERRORS_FILL_COLOR: &str = "#ff880099"; // yellow-orange
-const RECEIVE_ERRORS_LINE_COLOR: &str = "#ff6600"; // orange
-const RECEIVE_ERRORS_FILL_COLOR: &str = "#ff660099"; // orange
+const RECEIVE_ERRORS_LINE_COLOR: &str = "#ff4400"; // orange
+const RECEIVE_ERRORS_FILL_COLOR: &str = "#ff440099"; // orange
 
 const TCP_LINE_COLOR: &str = "#44eedd"; // teal
 const TCP_FILL_COLOR: &str = "#44eedd99"; // teal
