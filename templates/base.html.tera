@@ -6,7 +6,7 @@
     </head>
     {% if dark_mode %}
         {% set text_color = "#eeeeee" %}
-        {% set background_color = "#444444" %}
+        {% set background_color = "#222222" %}
         {% set chart_text_color = "#dddddd" %}
     {% else %}
         {% set text_color = "#000000" %}

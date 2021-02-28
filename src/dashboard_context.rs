@@ -3,7 +3,8 @@ use serde::Serialize;
 
 use crate::{stats::GeneralStats, stats_history::StatsHistory};
 
-const CPU_PER_LOGICAL_CPU_LINE_COLOR: &str = "#00000044"; // gray
+const CPU_PER_LOGICAL_CPU_LINE_COLOR_LIGHT_MODE: &str = "#00000044"; // gray
+const CPU_PER_LOGICAL_CPU_LINE_COLOR_DARK_MODE: &str = "#ffffff44"; // gray
 const CPU_AGGREGATE_LINE_COLOR: &str = "#ffcc00"; // yellow
 const CPU_AGGREGATE_FILL_COLOR: &str = "#ffcc0099"; // yellow
 
@@ -125,7 +126,7 @@ impl DashboardContext {
         //TODO more sections
 
         let mut charts = Vec::new();
-        charts.extend(build_cpu_charts(stats_history));
+        charts.extend(build_cpu_charts(stats_history, dark_mode));
         charts.push(build_memory_chart(stats_history));
         charts.push(build_load_average_chart(stats_history));
         charts.extend(build_network_charts(stats_history));
@@ -156,7 +157,7 @@ fn build_general_section(stats: &GeneralStats) -> Option<DashboardSectionContext
     }
 }
 
-fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
+fn build_cpu_charts(stats_history: &StatsHistory, dark_mode: bool) -> Vec<ChartContext> {
     let mut charts = Vec::new();
     let mut cpu_datasets = Vec::new();
     let mut aggregate_values = Vec::new();
@@ -202,10 +203,15 @@ fn build_cpu_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
         }
     }
 
+    let per_logical_cpu_line_color = if dark_mode {
+        CPU_PER_LOGICAL_CPU_LINE_COLOR_DARK_MODE
+    } else {
+        CPU_PER_LOGICAL_CPU_LINE_COLOR_LIGHT_MODE
+    };
     for (i, values) in per_logical_cpu_values_flipped.into_iter().enumerate() {
         cpu_datasets.push(DatasetContext {
             name: format!("CPU {}", i),
-            line_color_code: CPU_PER_LOGICAL_CPU_LINE_COLOR.to_string(),
+            line_color_code: per_logical_cpu_line_color.to_string(),
             fill_color_code: "".to_string(),
             values,
             fill: false,
