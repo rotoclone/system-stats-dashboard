@@ -178,11 +178,34 @@ fn build_general_section(stats: &GeneralStats) -> Option<DashboardSectionContext
 }
 
 fn build_filesystems_section(mount_stats: &[MountStats]) -> DashboardSectionContext {
-    //TODO
+    let mut total_used_mb = 0;
+    let mut total_total_mb = 0;
+    let mut subsections = Vec::new();
+    for mount in mount_stats {
+        total_used_mb += mount.used_mb;
+        total_total_mb += mount.total_mb;
+        let used_pct = ((mount.used_mb as f64) / (mount.total_mb as f64)) * 100.0;
+        subsections.push(DashboardSubsectionContext {
+            name: mount.mounted_on.clone(),
+            stats: vec![
+                format!("Type: {}", mount.fs_type),
+                format!("Mounted from: {}", mount.mounted_from),
+                format!(
+                    "Used: {}/{} MB ({}%)",
+                    mount.used_mb, mount.total_mb, used_pct
+                ),
+            ],
+        });
+    }
+
+    let total_used_pct = ((total_used_mb as f64) / (total_total_mb as f64)) * 100.0;
     DashboardSectionContext {
         name: "Filesystems".to_string(),
-        stats: Vec::new(),
-        subsections: Vec::new(),
+        stats: vec![format!(
+            "Total used: {}/{} MB ({}%)",
+            total_used_mb, total_total_mb, total_used_pct
+        )],
+        subsections,
     }
 }
 

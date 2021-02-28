@@ -205,15 +205,15 @@ impl MemoryStats {
 #[serde(rename_all = "camelCase")]
 pub struct MountStats {
     /// Type of filesystem (NTFS, ext3, etc.)
-    fs_type: String,
+    pub fs_type: String,
     /// Name of the device corresponding to this mount
-    mounted_from: String,
+    pub mounted_from: String,
     /// Root path corresponding to this mount
-    mounted_on: String,
+    pub mounted_on: String,
     /// Space of this mount used in megabytes
-    used_mb: u64,
+    pub used_mb: u64,
     /// Total space for this mount in megabytes
-    total_mb: u64,
+    pub total_mb: u64,
 }
 
 impl MountStats {
