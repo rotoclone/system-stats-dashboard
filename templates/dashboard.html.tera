@@ -106,12 +106,14 @@
             {% endfor %}
         </ul>
         {% for subsection in section.subsections %}
-            <h2>{{ subsection.name }}</h2>
-            <ul>
-                {% for stat in subsection.stats %}
-                    <li>{{ stat }}</li>
-                {% endfor %}
-            </ul>
+            <div style="margin-left:3em">
+                <h2>{{ subsection.name }}</h2>
+                <ul>
+                    {% for stat in subsection.stats %}
+                        <li>{{ stat }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         {% endfor %}
     {% endfor %}
     <p>Last updated at: {{ last_update_time }}</p>

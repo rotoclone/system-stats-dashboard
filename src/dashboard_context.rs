@@ -191,7 +191,7 @@ fn build_filesystems_section(mount_stats: &[MountStats]) -> DashboardSectionCont
                 format!("Type: {}", mount.fs_type),
                 format!("Mounted from: {}", mount.mounted_from),
                 format!(
-                    "Used: {}/{} MB ({}%)",
+                    "Used: {} / {} MB ({:.2}%)",
                     mount.used_mb, mount.total_mb, used_pct
                 ),
             ],
@@ -202,7 +202,7 @@ fn build_filesystems_section(mount_stats: &[MountStats]) -> DashboardSectionCont
     DashboardSectionContext {
         name: "Filesystems".to_string(),
         stats: vec![format!(
-            "Total used: {}/{} MB ({}%)",
+            "Total used: {} / {} MB ({:.2}%)",
             total_used_mb, total_total_mb, total_used_pct
         )],
         subsections,
@@ -386,7 +386,7 @@ fn build_load_average_chart(stats_history: &StatsHistory) -> ChartContext {
     }
 
     let accompanying_text = format!(
-        "1: {}, 5: {}, 15: {}",
+        "1: {:.2}, 5: {:.2}, 15: {:.2}",
         one_min_values.last().unwrap_or(&0.0),
         five_min_values.last().unwrap_or(&0.0),
         fifteen_min_values.last().unwrap_or(&0.0)
