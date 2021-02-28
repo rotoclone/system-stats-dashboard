@@ -5,9 +5,9 @@
         <title>{{ title }}</title>
     </head>
     {% if dark_mode %}
-        {% set text_color = "#eeeeee" %}
+        {% set text_color = "#dddddd" %}
         {% set background_color = "#222222" %}
-        {% set chart_text_color = "#dddddd" %}
+        {% set chart_text_color = "#cccccc" %}
     {% else %}
         {% set text_color = "#000000" %}
         {% set background_color = "#ffffff" %}

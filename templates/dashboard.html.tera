@@ -114,4 +114,5 @@
             </ul>
         {% endfor %}
     {% endfor %}
+    <p>Last updated at: {{ last_update_time }}</p>
 {% endblock content %}

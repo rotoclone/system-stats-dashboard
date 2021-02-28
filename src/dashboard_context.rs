@@ -1,7 +1,10 @@
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, NaiveDateTime, SecondsFormat, Utc};
 use serde::Serialize;
 
-use crate::{stats::GeneralStats, stats_history::StatsHistory};
+use crate::{
+    stats::{GeneralStats, MountStats, NetworkStats},
+    stats_history::StatsHistory,
+};
 
 const CPU_PER_LOGICAL_CPU_LINE_COLOR_LIGHT_MODE: &str = "#00000044"; // gray
 const CPU_PER_LOGICAL_CPU_LINE_COLOR_DARK_MODE: &str = "#ffffff44"; // gray
@@ -42,6 +45,7 @@ pub struct DashboardContext {
     dark_mode: bool,
     charts: Vec<ChartContext>,
     sections: Vec<DashboardSectionContext>,
+    last_update_time: String,
 }
 
 #[derive(Serialize)]
@@ -116,6 +120,7 @@ impl DashboardContext {
                         stats: Vec::new(),
                         subsections: Vec::new(),
                     }],
+                    last_update_time: "N/A".to_string(),
                 }
             }
         };
@@ -123,7 +128,12 @@ impl DashboardContext {
         if let Some(x) = build_general_section(&most_recent_stats.general) {
             sections.push(x);
         }
-        //TODO more sections
+        if let Some(x) = &most_recent_stats.filesystems {
+            sections.push(build_filesystems_section(x));
+        }
+        if let Some(x) = build_network_section(&most_recent_stats.network) {
+            sections.push(x);
+        }
 
         let mut charts = Vec::new();
         charts.extend(build_cpu_charts(stats_history, dark_mode));
@@ -136,6 +146,9 @@ impl DashboardContext {
             dark_mode,
             charts,
             sections,
+            last_update_time: most_recent_stats
+                .collection_time
+                .to_rfc3339_opts(SecondsFormat::Millis, true),
         }
     }
 }
@@ -145,6 +158,13 @@ fn build_general_section(stats: &GeneralStats) -> Option<DashboardSectionContext
     if let Some(x) = stats.uptime_seconds {
         stat_strings.push(format!("Uptime: {} seconds", x))
     };
+    if let Some(x) = stats.boot_timestamp {
+        let parsed_time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(x, 0), Utc);
+        stat_strings.push(format!(
+            "Boot time: {}",
+            parsed_time.with_timezone(&Local).to_rfc3339()
+        ))
+    }
 
     if stat_strings.is_empty() {
         None
@@ -155,6 +175,19 @@ fn build_general_section(stats: &GeneralStats) -> Option<DashboardSectionContext
             subsections: Vec::new(),
         })
     }
+}
+
+fn build_filesystems_section(mount_stats: &[MountStats]) -> DashboardSectionContext {
+    //TODO
+    DashboardSectionContext {
+        name: "Filesystems".to_string(),
+        stats: Vec::new(),
+        subsections: Vec::new(),
+    }
+}
+
+fn build_network_section(stats: &NetworkStats) -> Option<DashboardSectionContext> {
+    None //TODO
 }
 
 fn build_cpu_charts(stats_history: &StatsHistory, dark_mode: bool) -> Vec<ChartContext> {
