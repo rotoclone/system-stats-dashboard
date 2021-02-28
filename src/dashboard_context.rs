@@ -397,21 +397,21 @@ fn build_load_average_chart(stats_history: &StatsHistory) -> ChartContext {
             line_color_code: LOAD_AVERAGE_1_LINE_COLOR.to_string(),
             fill_color_code: LOAD_AVERAGE_1_FILL_COLOR.to_string(),
             values: one_min_values,
-            fill: true,
+            fill: false,
         },
         DatasetContext {
             name: "5 minutes".to_string(),
             line_color_code: LOAD_AVERAGE_5_LINE_COLOR.to_string(),
             fill_color_code: LOAD_AVERAGE_5_FILL_COLOR.to_string(),
             values: five_min_values,
-            fill: true,
+            fill: false,
         },
         DatasetContext {
             name: "15 minutes".to_string(),
             line_color_code: LOAD_AVERAGE_15_LINE_COLOR.to_string(),
             fill_color_code: LOAD_AVERAGE_15_FILL_COLOR.to_string(),
             values: fifteen_min_values,
-            fill: true,
+            fill: false,
         },
     ];
 
@@ -491,14 +491,14 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
             line_color_code: SENT_LINE_COLOR.to_string(),
             fill_color_code: SENT_FILL_COLOR.to_string(),
             values: sent_mb_values,
-            fill: true,
+            fill: false,
         },
         DatasetContext {
             name: "Received".to_string(),
             line_color_code: RECEIVED_LINE_COLOR.to_string(),
             fill_color_code: RECEIVED_FILL_COLOR.to_string(),
             values: received_mb_values,
-            fill: true,
+            fill: false,
         },
     ];
 
@@ -526,14 +526,14 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
             line_color_code: SEND_ERRORS_LINE_COLOR.to_string(),
             fill_color_code: SEND_ERRORS_FILL_COLOR.to_string(),
             values: send_errors_values,
-            fill: true,
+            fill: false,
         },
         DatasetContext {
             name: "Receive".to_string(),
             line_color_code: RECEIVE_ERRORS_LINE_COLOR.to_string(),
             fill_color_code: RECEIVE_ERRORS_FILL_COLOR.to_string(),
             values: receive_errors_values,
-            fill: true,
+            fill: false,
         },
     ];
 
@@ -561,14 +561,14 @@ fn build_network_charts(stats_history: &StatsHistory) -> Vec<ChartContext> {
             line_color_code: TCP_LINE_COLOR.to_string(),
             fill_color_code: TCP_FILL_COLOR.to_string(),
             values: tcp_sockets_values,
-            fill: true,
+            fill: false,
         },
         DatasetContext {
             name: "UDP".to_string(),
             line_color_code: UDP_LINE_COLOR.to_string(),
             fill_color_code: UDP_FILL_COLOR.to_string(),
             values: udp_sockets_values,
-            fill: true,
+            fill: false,
         },
     ];
 
