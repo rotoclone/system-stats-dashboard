@@ -4,6 +4,15 @@
         <meta charset="utf-8"/>
         <title>{{ title }}</title>
     </head>
-    <body style="font-family:sans-serif;"> {% block content %}{% endblock content %}
+    {% if dark_mode %}
+        {% set text_color = "#eeeeee" %}
+        {% set background_color = "#444444" %}
+        {% set chart_text_color = "#dddddd" %}
+    {% else %}
+        {% set text_color = "#000000" %}
+        {% set background_color = "#ffffff" %}
+        {% set chart_text_color = "#666666" %}
+    {% endif %}
+    <body style="font-family:sans-serif; color:{{ text_color }}; background-color:{{ background_color }}ee;"> {% block content %}{% endblock content %}
         </body>
     </html>

@@ -87,9 +87,12 @@ fn get_network_stats() -> Json<NetworkStats> {
 }
 
 /// Endpoint to view the dashboard.
-#[get("/dashboard")]
-fn dashboard(stats_history: State<UpdatingStatsHistory>) -> Template {
-    let context = DashboardContext::from(&stats_history.stats_history.lock().unwrap());
+#[get("/dashboard?<dark>")]
+fn dashboard(stats_history: State<UpdatingStatsHistory>, dark: Option<bool>) -> Template {
+    let context = DashboardContext::from(
+        &stats_history.stats_history.lock().unwrap(),
+        dark.unwrap_or(true),
+    );
     Template::render("dashboard", &context)
 }
 

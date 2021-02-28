@@ -38,6 +38,7 @@ const LOAD_AVERAGE_15_FILL_COLOR: &str = "#7700ff99"; // dark purple
 #[derive(Serialize)]
 pub struct DashboardContext {
     title: String,
+    dark_mode: bool,
     charts: Vec<ChartContext>,
     sections: Vec<DashboardSectionContext>,
 }
@@ -94,7 +95,11 @@ struct DashboardSubsectionContext {
 }
 
 impl DashboardContext {
-    pub fn from(stats_history: &StatsHistory) -> DashboardContext {
+    /// Builds a `DashboardContext` from the provided stats history.
+    /// # Params
+    /// * `stats_history` - The stats history to use to populate the context.
+    /// * `dark_mode` - Whether dark mode is enabled or not.
+    pub fn from(stats_history: &StatsHistory, dark_mode: bool) -> DashboardContext {
         let title = "Dashboard".to_string();
 
         let mut sections = Vec::new();
@@ -103,6 +108,7 @@ impl DashboardContext {
             None => {
                 return DashboardContext {
                     title,
+                    dark_mode,
                     charts: Vec::new(),
                     sections: vec![DashboardSectionContext {
                         name: "No stats yet".to_string(),
@@ -126,6 +132,7 @@ impl DashboardContext {
 
         DashboardContext {
             title,
+            dark_mode,
             charts,
             sections,
         }
