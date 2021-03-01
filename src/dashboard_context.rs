@@ -128,11 +128,11 @@ impl DashboardContext {
         if let Some(x) = build_general_section(&most_recent_stats.general) {
             sections.push(x);
         }
-        if let Some(x) = &most_recent_stats.filesystems {
-            sections.push(build_filesystems_section(x));
-        }
         if let Some(x) = build_network_section(&most_recent_stats.network) {
             sections.push(x);
+        }
+        if let Some(x) = &most_recent_stats.filesystems {
+            sections.push(build_filesystems_section(x));
         }
 
         let mut charts = Vec::new();
@@ -177,6 +177,60 @@ fn build_general_section(stats: &GeneralStats) -> Option<DashboardSectionContext
     }
 }
 
+fn build_network_section(network_stats: &NetworkStats) -> Option<DashboardSectionContext> {
+    let mut subsections = Vec::new();
+    match &network_stats.sockets {
+        Some(socket_stats) => subsections.push(DashboardSubsectionContext {
+            name: "Sockets".to_string(),
+            stats: vec![
+                format!(
+                    "TCP: {} in use total, {} IPv6, {} orphaned",
+                    socket_stats.tcp_in_use, socket_stats.tcp6_in_use, socket_stats.tcp_orphaned
+                ),
+                format!(
+                    "UDP: {} in use total, {} IPv6",
+                    socket_stats.udp_in_use, socket_stats.udp6_in_use
+                ),
+            ],
+        }),
+        None => (),
+    }
+
+    match &network_stats.interfaces {
+        Some(x) => {
+            for interface in x {
+                subsections.push(DashboardSubsectionContext {
+                    name: interface.name.clone(),
+                    stats: vec![
+                        format!("IP addresses: {}", interface.addresses.join(", ")),
+                        format!(
+                            "Sent: {} packets, {} MB, {} errors",
+                            interface.sent_packets, interface.sent_mb, interface.send_errors
+                        ),
+                        format!(
+                            "Received: {} packets, {} MB, {} errors",
+                            interface.received_packets,
+                            interface.received_mb,
+                            interface.receive_errors
+                        ),
+                    ],
+                })
+            }
+        }
+        None => (),
+    }
+
+    if subsections.is_empty() {
+        None
+    } else {
+        Some(DashboardSectionContext {
+            name: "Network".to_string(),
+            stats: Vec::new(),
+            subsections,
+        })
+    }
+}
+
 fn build_filesystems_section(mount_stats: &[MountStats]) -> DashboardSectionContext {
     let mut total_used_mb = 0;
     let mut total_total_mb = 0;
@@ -207,10 +261,6 @@ fn build_filesystems_section(mount_stats: &[MountStats]) -> DashboardSectionCont
         )],
         subsections,
     }
-}
-
-fn build_network_section(stats: &NetworkStats) -> Option<DashboardSectionContext> {
-    None //TODO
 }
 
 fn build_cpu_charts(stats_history: &StatsHistory, dark_mode: bool) -> Vec<ChartContext> {
