@@ -1,3 +1,5 @@
+use std::num::NonZeroUsize;
+
 use rocket::{http::Status, State};
 use rocket_contrib::{json::Json, templates::Template};
 use systemstat::{Duration, Platform, System};
@@ -14,7 +16,8 @@ use dashboard_context::*;
 #[macro_use]
 extern crate rocket;
 
-pub const STATS_HISTORY_SIZE: usize = 100;
+pub const STATS_HISTORY_SIZE: usize = 120;
+pub const STATS_CONSOLIDATION_LIMIT: usize = 20;
 pub const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
 const CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(500);
 
@@ -116,6 +119,7 @@ fn rocket() -> rocket::Rocket {
             System::new(),
             CPU_LOAD_SAMPLE_DURATION,
             STATS_UPDATE_FREQUENCY,
-            StatsHistory::new(STATS_HISTORY_SIZE),
+            NonZeroUsize::new(STATS_HISTORY_SIZE).unwrap(),
+            NonZeroUsize::new(STATS_CONSOLIDATION_LIMIT).unwrap(),
         ))
 }
