@@ -37,6 +37,7 @@ impl UpdatingStatsHistory {
         let update_thread_stats_history = Arc::clone(&shared_stats_history);
         let update_thread = thread::spawn(move || loop {
             let new_stats = AllStats::from(&system, cpu_sample_duration);
+            recent_stats.push(new_stats.clone());
             // This needs to be in its own block so the mutexes are unlocked before the thread::sleep
             {
                 let mut history = update_thread_stats_history.lock().unwrap();
@@ -46,7 +47,6 @@ impl UpdatingStatsHistory {
                     history.push(new_stats);
                     recent_stats = Vec::with_capacity(consolidation_limit.get());
                 } else {
-                    recent_stats.push(new_stats.clone());
                     history.update_most_recent_stats(new_stats);
                 }
             }
