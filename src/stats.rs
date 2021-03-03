@@ -1,5 +1,6 @@
 use std::{io::Error, thread};
 
+use chrono::{DateTime, Local};
 use serde::Serialize;
 use systemstat::{
     saturating_sub_bytes, ByteSize, Duration, IpAddr, NetworkAddrs, Platform, System,
@@ -21,6 +22,8 @@ pub struct AllStats {
     pub filesystems: Option<Vec<MountStats>>,
     /// Network stats
     pub network: NetworkStats,
+    /// The time at which the stats were collected
+    pub collection_time: DateTime<Local>,
 }
 
 impl AllStats {
@@ -35,6 +38,7 @@ impl AllStats {
             memory: MemoryStats::from(&sys),
             filesystems: MountStats::from(&sys),
             network: NetworkStats::from(&sys),
+            collection_time: Local::now(),
         }
     }
 }
@@ -44,11 +48,11 @@ impl AllStats {
 #[serde(rename_all = "camelCase")]
 pub struct GeneralStats {
     /// Number of seconds the system has been running
-    uptime_seconds: Option<u64>,
+    pub uptime_seconds: Option<u64>,
     /// Boot time in seconds since the UNIX epoch
-    boot_timestamp: Option<i64>,
+    pub boot_timestamp: Option<i64>,
     /// Load average values for the system
-    load_averages: Option<LoadAverages>,
+    pub load_averages: Option<LoadAverages>,
 }
 
 /// Load average values
@@ -56,11 +60,11 @@ pub struct GeneralStats {
 #[serde(rename_all = "camelCase")]
 pub struct LoadAverages {
     /// Load average over the last minute
-    one_minute: f32,
+    pub one_minute: f32,
     /// Load average over the last 5 minutes
-    five_minutes: f32,
+    pub five_minutes: f32,
     /// Load average over the last 15 minutes
-    fifteen_minutes: f32,
+    pub fifteen_minutes: f32,
 }
 
 impl GeneralStats {
@@ -107,11 +111,11 @@ impl GeneralStats {
 #[serde(rename_all = "camelCase")]
 pub struct CpuStats {
     /// Load percentages for each logical CPU
-    per_logical_cpu_load_percent: Option<Vec<f32>>,
+    pub per_logical_cpu_load_percent: Option<Vec<f32>>,
     /// Load percentage of the CPU as a whole
-    aggregate_load_percent: Option<f32>,
+    pub aggregate_load_percent: Option<f32>,
     /// Temperature of the CPU in degrees Celsius
-    temp_celsius: Option<f32>,
+    pub temp_celsius: Option<f32>,
 }
 
 impl CpuStats {
@@ -172,9 +176,9 @@ impl CpuStats {
 #[serde(rename_all = "camelCase")]
 pub struct MemoryStats {
     /// Megabytes of memory used
-    used_mb: u64,
+    pub used_mb: u64,
     /// Megabytes of memory total
-    total_mb: u64,
+    pub total_mb: u64,
 }
 
 impl MemoryStats {
@@ -201,15 +205,15 @@ impl MemoryStats {
 #[serde(rename_all = "camelCase")]
 pub struct MountStats {
     /// Type of filesystem (NTFS, ext3, etc.)
-    fs_type: String,
+    pub fs_type: String,
     /// Name of the device corresponding to this mount
-    mounted_from: String,
+    pub mounted_from: String,
     /// Root path corresponding to this mount
-    mounted_on: String,
+    pub mounted_on: String,
     /// Space of this mount used in megabytes
-    used_mb: u64,
+    pub used_mb: u64,
     /// Total space for this mount in megabytes
-    total_mb: u64,
+    pub total_mb: u64,
 }
 
 impl MountStats {
@@ -248,9 +252,9 @@ impl MountStats {
 #[serde(rename_all = "camelCase")]
 pub struct NetworkStats {
     /// Stats for network interfaces
-    interfaces: Option<Vec<NetworkInterfaceStats>>,
+    pub interfaces: Option<Vec<NetworkInterfaceStats>>,
     /// Stats for sockets
-    sockets: Option<SocketStats>,
+    pub sockets: Option<SocketStats>,
 }
 
 impl NetworkStats {
@@ -268,21 +272,21 @@ impl NetworkStats {
 #[serde(rename_all = "camelCase")]
 pub struct NetworkInterfaceStats {
     /// The name of the interface
-    name: String,
+    pub name: String,
     /// IP addresses associated with this interface
-    addresses: Vec<String>,
-    /// Total bytes sent via this interface
-    sent_bytes: u64,
-    /// Total bytes received via this interface
-    received_bytes: u64,
+    pub addresses: Vec<String>,
+    /// Total megabytes sent via this interface
+    pub sent_mb: u64,
+    /// Total megabytes received via this interface
+    pub received_mb: u64,
     /// Total packets sent via this interface
-    sent_packets: u64,
+    pub sent_packets: u64,
     /// Total packets received via this interface
-    received_packets: u64,
+    pub received_packets: u64,
     /// Total number of errors that occured while sending data via this interface
-    send_errors: u64,
+    pub send_errors: u64,
     /// Total number of errors that occured while receiving data via this interface
-    receive_errors: u64,
+    pub receive_errors: u64,
 }
 
 impl NetworkInterfaceStats {
@@ -302,8 +306,8 @@ impl NetworkInterfaceStats {
                             Some(NetworkInterfaceStats {
                                 name: interface.name,
                                 addresses,
-                                sent_bytes: stats.tx_bytes.as_u64(),
-                                received_bytes: stats.rx_bytes.as_u64(),
+                                sent_mb: bytes_to_mb(stats.tx_bytes),
+                                received_mb: bytes_to_mb(stats.rx_bytes),
                                 sent_packets: stats.tx_packets,
                                 received_packets: stats.rx_packets,
                                 send_errors: stats.tx_errors,
@@ -333,15 +337,15 @@ impl NetworkInterfaceStats {
 #[serde(rename_all = "camelCase")]
 pub struct SocketStats {
     /// Number of TCP sockets in use
-    tcp_in_use: usize,
+    pub tcp_in_use: usize,
     /// Number of orphaned TCP sockets
-    tcp_orphaned: usize,
+    pub tcp_orphaned: usize,
     /// Number of UDP sockets in use
-    udp_in_use: usize,
+    pub udp_in_use: usize,
     /// Number of IPv6 TCP sockets in use
-    tcp6_in_use: usize,
+    pub tcp6_in_use: usize,
     /// Number of IPv6 UDP sockets in use
-    udp6_in_use: usize,
+    pub udp6_in_use: usize,
 }
 
 impl SocketStats {

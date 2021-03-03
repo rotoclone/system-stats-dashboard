@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>{{ title }}</title>
+    </head>
+    {% if dark_mode %}
+        {% set text_color = "#dddddd" %}
+        {% set background_color = "#222222" %}
+        {% set chart_text_color = "#cccccc" %}
+    {% else %}
+        {% set text_color = "#000000" %}
+        {% set background_color = "#ffffff" %}
+        {% set chart_text_color = "#666666" %}
+    {% endif %}
+    <body style="font-family:sans-serif; color:{{ text_color }}; background-color:{{ background_color }}ee;"> {% block content %}{% endblock content %}
+        </body>
+    </html>

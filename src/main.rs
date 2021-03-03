@@ -1,5 +1,5 @@
 use rocket::{http::Status, State};
-use rocket_contrib::json::Json;
+use rocket_contrib::{json::Json, templates::Template};
 use systemstat::{Duration, Platform, System};
 
 mod stats;
@@ -8,12 +8,15 @@ use stats::*;
 mod stats_history;
 use stats_history::*;
 
+mod dashboard_context;
+use dashboard_context::*;
+
 #[macro_use]
 extern crate rocket;
 
-const STATS_HISTORY_SIZE: usize = 100;
-const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
-const CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(250);
+pub const STATS_HISTORY_SIZE: usize = 100;
+pub const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
+const CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(500);
 
 /// Endpoint to get all the system stats.
 #[get("/stats")]
@@ -83,6 +86,16 @@ fn get_network_stats() -> Json<NetworkStats> {
     Json(NetworkStats::from(&System::new()))
 }
 
+/// Endpoint to view the dashboard.
+#[get("/dashboard?<dark>")]
+fn dashboard(stats_history: State<UpdatingStatsHistory>, dark: Option<bool>) -> Template {
+    let context = DashboardContext::from(
+        &stats_history.stats_history.lock().unwrap(),
+        dark.unwrap_or(true),
+    );
+    Template::render("dashboard", &context)
+}
+
 #[launch]
 fn rocket() -> rocket::Rocket {
     rocket::ignite()
@@ -95,8 +108,10 @@ fn rocket() -> rocket::Rocket {
                 get_memory_stats,
                 get_filesystem_stats,
                 get_network_stats,
+                dashboard,
             ],
         )
+        .attach(Template::fairing())
         .manage(UpdatingStatsHistory::new(
             System::new(),
             CPU_LOAD_SAMPLE_DURATION,
