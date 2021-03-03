@@ -32,6 +32,7 @@ impl UpdatingStatsHistory {
         history_size: NonZeroUsize,
         consolidation_limit: NonZeroUsize,
     ) -> UpdatingStatsHistory {
+        //TODO instead of maintaining this list, keep a single moving average?
         let mut recent_stats = Vec::with_capacity(consolidation_limit.get());
         let shared_stats_history = Arc::new(Mutex::new(StatsHistory::new(history_size)));
         let update_thread_stats_history = Arc::clone(&shared_stats_history);
