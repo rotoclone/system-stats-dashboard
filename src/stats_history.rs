@@ -187,26 +187,6 @@ impl MovingAverage<f32> for f32 {
     }
 }
 
-/* TODO remove
-impl MovingAverage<u64> for u64 {
-    fn updated_average(self, new_value: u64, n: usize) -> u64 {
-        //TODO handle self > new_value
-        if new_value < self {
-            self - ((self - new_value) / n as u64)
-        } else {
-            self + ((new_value - self) / n as u64)
-        }
-    }
-}
-
-impl MovingAverage<usize> for usize {
-    fn updated_average(self, new_value: usize, n: usize) -> usize {
-        //TODO handle self > new_value
-        self + ((new_value - self) / n)
-    }
-}
-*/
-
 trait MovingAverageCollection<T> {
     /// Updates the averages to take into account a new set of values.
     /// # Params
