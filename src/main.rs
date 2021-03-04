@@ -16,7 +16,7 @@ use dashboard_context::*;
 #[macro_use]
 extern crate rocket;
 
-pub const STATS_HISTORY_SIZE: usize = 120;
+pub const STATS_HISTORY_SIZE: usize = 180;
 pub const STATS_CONSOLIDATION_LIMIT: usize = 20;
 pub const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
 const CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(500);
