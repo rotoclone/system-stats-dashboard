@@ -9,7 +9,7 @@ use systemstat::{
 const BYTES_PER_MB: u64 = 1_000_000;
 
 /// All system stats
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AllStats {
     /// General system stats
@@ -44,7 +44,7 @@ impl AllStats {
 }
 
 /// General system stats
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GeneralStats {
     /// Number of seconds the system has been running
@@ -56,7 +56,7 @@ pub struct GeneralStats {
 }
 
 /// Load average values
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LoadAverages {
     /// Load average over the last minute
@@ -107,7 +107,7 @@ impl GeneralStats {
 }
 
 /// CPU stats
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CpuStats {
     /// Load percentages for each logical CPU
@@ -172,7 +172,7 @@ impl CpuStats {
 }
 
 /// Memory stats
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MemoryStats {
     /// Megabytes of memory used
@@ -201,7 +201,7 @@ impl MemoryStats {
 }
 
 /// Stats for a mounted filesystem
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MountStats {
     /// Type of filesystem (NTFS, ext3, etc.)
@@ -248,7 +248,7 @@ impl MountStats {
 }
 
 /// Network stats
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct NetworkStats {
     /// Stats for network interfaces
@@ -268,7 +268,7 @@ impl NetworkStats {
 }
 
 /// Stats for a network interface
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct NetworkInterfaceStats {
     /// The name of the interface
@@ -333,7 +333,7 @@ impl NetworkInterfaceStats {
 }
 
 /// Stats for sockets
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SocketStats {
     /// Number of TCP sockets in use

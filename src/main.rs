@@ -21,6 +21,12 @@ pub const STATS_CONSOLIDATION_LIMIT: usize = 20;
 pub const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
 const CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(500);
 
+const HISTORY_FILES_DIRECTORY_CONFIG_KEY: &str = "history_files_directory";
+const DEFAULT_HISTORY_FILES_DIRECTORY: &str = "./stats_history";
+
+const HISTORY_FILES_DIRECTORY_MAX_SIZE_CONFIG_KEY: &str = "history_files_max_size";
+const DEFAULT_HISTORY_FILES_DIRECTORY_MAX_SIZE: u64 = 2_000_000;
+
 /// Endpoint to get all the system stats.
 #[get("/stats")]
 fn get_all_stats(stats_history: State<UpdatingStatsHistory>) -> Result<Json<AllStats>, Status> {
@@ -101,7 +107,7 @@ fn dashboard(stats_history: State<UpdatingStatsHistory>, dark: Option<bool>) -> 
 
 #[launch]
 fn rocket() -> rocket::Rocket {
-    rocket::ignite()
+    let mut rocket = rocket::ignite()
         .mount(
             "/",
             routes![
@@ -114,12 +120,25 @@ fn rocket() -> rocket::Rocket {
                 dashboard,
             ],
         )
-        .attach(Template::fairing())
-        .manage(UpdatingStatsHistory::new(
-            System::new(),
-            CPU_LOAD_SAMPLE_DURATION,
-            STATS_UPDATE_FREQUENCY,
-            NonZeroUsize::new(STATS_HISTORY_SIZE).unwrap(),
-            NonZeroUsize::new(STATS_CONSOLIDATION_LIMIT).unwrap(),
-        ))
+        .attach(Template::fairing());
+
+    let history_files_dir = rocket
+        .figment()
+        .extract_inner(HISTORY_FILES_DIRECTORY_CONFIG_KEY)
+        .unwrap_or(DEFAULT_HISTORY_FILES_DIRECTORY);
+    let history_files_dir_max_size = rocket
+        .figment()
+        .extract_inner(HISTORY_FILES_DIRECTORY_MAX_SIZE_CONFIG_KEY)
+        .unwrap_or(DEFAULT_HISTORY_FILES_DIRECTORY_MAX_SIZE);
+    rocket = rocket.manage(UpdatingStatsHistory::new(
+        System::new(),
+        CPU_LOAD_SAMPLE_DURATION,
+        STATS_UPDATE_FREQUENCY,
+        NonZeroUsize::new(STATS_HISTORY_SIZE).unwrap(),
+        NonZeroUsize::new(STATS_CONSOLIDATION_LIMIT).unwrap(),
+        history_files_dir.into(),
+        history_files_dir_max_size,
+    ));
+
+    rocket
 }

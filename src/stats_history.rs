@@ -2,12 +2,19 @@ use systemstat::System;
 use thread::JoinHandle;
 
 use crate::stats::*;
+use std::{fs::create_dir_all, io::Write};
 use std::{
+    fs::{rename, OpenOptions},
+    io,
     num::NonZeroUsize,
+    path::{Path, PathBuf},
     sync::{Arc, Mutex},
     thread,
     time::Duration,
 };
+
+const CURRENT_HISTORY_FILE_NAME: &str = "current_stats.txt";
+const OLD_HISTORY_FILE_NAME: &str = "old_stats.txt";
 
 /// Stats history that updates itself periodically.
 pub struct UpdatingStatsHistory {
@@ -25,12 +32,16 @@ impl UpdatingStatsHistory {
     /// * `update_frequency` - How often new stats should be gathered. Must be greater than `cpu_sample_duration`.
     /// * `history_size` - The maximum number of entries to keep in the history.
     /// * `consolidation_limit` - The number of times to gather stats before consolidating them and adding them to the history.
+    /// * `history_dir` - The base directory to save the status history to.
+    /// * `history_dir_size_limit_bytes` - The maximum size to allow the saved status history directory to grow to, in bytes.
     pub fn new(
         system: System,
         cpu_sample_duration: Duration,
         update_frequency: Duration,
         history_size: NonZeroUsize,
         consolidation_limit: NonZeroUsize,
+        history_dir: PathBuf,
+        history_dir_size_limit_bytes: u64,
     ) -> UpdatingStatsHistory {
         //TODO instead of maintaining this list, keep a single moving average?
         let mut recent_stats = Vec::with_capacity(consolidation_limit.get());
@@ -39,18 +50,29 @@ impl UpdatingStatsHistory {
         let update_thread = thread::spawn(move || loop {
             let new_stats = AllStats::from(&system, cpu_sample_duration);
             recent_stats.push(new_stats.clone());
-            // This needs to be in its own block so the mutexes are unlocked before the thread::sleep
-            {
-                let mut history = update_thread_stats_history.lock().unwrap();
-                if recent_stats.len() >= consolidation_limit.get() {
-                    let consolidated_stats = consolidate_all_stats(recent_stats);
+
+            if recent_stats.len() >= consolidation_limit.get() {
+                let consolidated_stats = consolidate_all_stats(recent_stats);
+                if let Err(e) = persist_stats(
+                    &consolidated_stats,
+                    &history_dir,
+                    history_dir_size_limit_bytes,
+                ) {
+                    //TODO use actual logging once https://github.com/SergioBenitez/Rocket/issues/21 is done
+                    println!("Error persisting stats to {:?}: {}", history_dir, e);
+                }
+
+                {
+                    let mut history = update_thread_stats_history.lock().unwrap();
                     history.update_most_recent_stats(consolidated_stats);
                     history.push(new_stats);
-                    recent_stats = Vec::with_capacity(consolidation_limit.get());
-                } else {
-                    history.update_most_recent_stats(new_stats);
                 }
+                recent_stats = Vec::with_capacity(consolidation_limit.get());
+            } else {
+                let mut history = update_thread_stats_history.lock().unwrap();
+                history.update_most_recent_stats(new_stats);
             }
+
             thread::sleep(update_frequency - cpu_sample_duration);
         });
 
@@ -169,6 +191,30 @@ fn consolidate_all_stats(mut stats_list: Vec<AllStats>) -> AllStats {
         network,
         collection_time,
     }
+}
+
+fn persist_stats(stats: &AllStats, dir: &Path, dir_size_limit_bytes: u64) -> io::Result<()> {
+    if !dir.exists() {
+        create_dir_all(dir)?;
+    }
+
+    let current_stats_path = dir.join(CURRENT_HISTORY_FILE_NAME);
+    let old_stats_path = dir.join(OLD_HISTORY_FILE_NAME);
+
+    // divide size limit by 2 since this swaps between 2 files
+    if current_stats_path.exists()
+        && current_stats_path.metadata()?.len() >= (dir_size_limit_bytes / 2)
+    {
+        rename(&current_stats_path, &old_stats_path)?;
+    }
+
+    let mut current_stats_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(current_stats_path)?;
+    writeln!(current_stats_file, "{}", serde_json::to_string(stats)?)?;
+
+    Ok(())
 }
 
 trait MovingAverage<T> {
