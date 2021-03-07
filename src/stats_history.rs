@@ -27,9 +27,9 @@ pub struct UpdatingStatsHistory {
 pub enum HistoryPersistenceConfig {
     Disabled,
     Enabled {
-        /// The base directory to save the status history to.
+        /// The base directory to save the stats history to.
         dir: PathBuf,
-        /// The maximum size to allow the saved status history directory to grow to, in bytes.
+        /// The maximum size to allow the saved stats history directory to grow to, in bytes.
         size_limit: u64,
     },
 }
