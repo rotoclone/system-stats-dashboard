@@ -2,5 +2,6 @@
 Provides a REST API to get system stats remotely
 
 Possible features to add:
-* Save stats history to disk periodically in case of crashes (and load it on startup?)
+* Load saved history from disk on startup
+* Tool to generate graphs from history files
 * Send emails if certain stats are above/below certain values for a certain amount of time
