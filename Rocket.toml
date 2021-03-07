@@ -1,5 +1,6 @@
 [default]
 address = "0.0.0.0"
 port = 8000
+persist_history = true
 history_files_directory = "./stats_history"
 history_files_max_size = 2_000_000

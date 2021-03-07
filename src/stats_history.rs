@@ -24,6 +24,16 @@ pub struct UpdatingStatsHistory {
     pub stats_history: Arc<Mutex<StatsHistory>>,
 }
 
+pub enum HistoryPersistenceConfig {
+    Disabled,
+    Enabled {
+        /// The base directory to save the status history to.
+        dir: PathBuf,
+        /// The maximum size to allow the saved status history directory to grow to, in bytes.
+        size_limit: u64,
+    },
+}
+
 impl UpdatingStatsHistory {
     /// Creates an `UpdatingStatsHistory`.
     /// # Params
@@ -32,16 +42,14 @@ impl UpdatingStatsHistory {
     /// * `update_frequency` - How often new stats should be gathered. Must be greater than `cpu_sample_duration`.
     /// * `history_size` - The maximum number of entries to keep in the history.
     /// * `consolidation_limit` - The number of times to gather stats before consolidating them and adding them to the history.
-    /// * `history_dir` - The base directory to save the status history to.
-    /// * `history_dir_size_limit_bytes` - The maximum size to allow the saved status history directory to grow to, in bytes.
+    /// * `persistence_config` - Configuration for persisting history to disk.
     pub fn new(
         system: System,
         cpu_sample_duration: Duration,
         update_frequency: Duration,
         history_size: NonZeroUsize,
         consolidation_limit: NonZeroUsize,
-        history_dir: PathBuf,
-        history_dir_size_limit_bytes: u64,
+        persistence_config: HistoryPersistenceConfig,
     ) -> UpdatingStatsHistory {
         //TODO instead of maintaining this list, keep a single moving average?
         let mut recent_stats = Vec::with_capacity(consolidation_limit.get());
@@ -53,13 +61,11 @@ impl UpdatingStatsHistory {
 
             if recent_stats.len() >= consolidation_limit.get() {
                 let consolidated_stats = consolidate_all_stats(recent_stats);
-                if let Err(e) = persist_stats(
-                    &consolidated_stats,
-                    &history_dir,
-                    history_dir_size_limit_bytes,
-                ) {
-                    //TODO use actual logging once https://github.com/SergioBenitez/Rocket/issues/21 is done
-                    println!("Error persisting stats to {:?}: {}", history_dir, e);
+                if let HistoryPersistenceConfig::Enabled { dir, size_limit } = &persistence_config {
+                    if let Err(e) = persist_stats(&consolidated_stats, dir, *size_limit) {
+                        //TODO use actual logging once https://github.com/SergioBenitez/Rocket/issues/21 is done
+                        println!("Error persisting stats to {:?}: {}", dir, e);
+                    }
                 }
 
                 {

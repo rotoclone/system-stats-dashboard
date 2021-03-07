@@ -21,6 +21,9 @@ pub const STATS_CONSOLIDATION_LIMIT: usize = 20;
 pub const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
 const CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(500);
 
+const PERSIST_HISTORY_TOGGLE_CONFIG_KEY: &str = "persist_history";
+const DEFAULT_PERSIST_HISTORY_TOGGLE: bool = true;
+
 const HISTORY_FILES_DIRECTORY_CONFIG_KEY: &str = "history_files_directory";
 const DEFAULT_HISTORY_FILES_DIRECTORY: &str = "./stats_history";
 
@@ -122,22 +125,35 @@ fn rocket() -> rocket::Rocket {
         )
         .attach(Template::fairing());
 
-    let history_files_dir = rocket
+    let history_persistence_enabled = rocket
         .figment()
-        .extract_inner(HISTORY_FILES_DIRECTORY_CONFIG_KEY)
-        .unwrap_or(DEFAULT_HISTORY_FILES_DIRECTORY);
-    let history_files_dir_max_size = rocket
-        .figment()
-        .extract_inner(HISTORY_FILES_DIRECTORY_MAX_SIZE_CONFIG_KEY)
-        .unwrap_or(DEFAULT_HISTORY_FILES_DIRECTORY_MAX_SIZE);
+        .extract_inner(PERSIST_HISTORY_TOGGLE_CONFIG_KEY)
+        .unwrap_or(DEFAULT_PERSIST_HISTORY_TOGGLE);
+    let persistence_config = if history_persistence_enabled {
+        let history_files_dir = rocket
+            .figment()
+            .extract_inner(HISTORY_FILES_DIRECTORY_CONFIG_KEY)
+            .unwrap_or(DEFAULT_HISTORY_FILES_DIRECTORY);
+        let history_files_dir_max_size = rocket
+            .figment()
+            .extract_inner(HISTORY_FILES_DIRECTORY_MAX_SIZE_CONFIG_KEY)
+            .unwrap_or(DEFAULT_HISTORY_FILES_DIRECTORY_MAX_SIZE);
+        println!("Stats history will be persisted to '{}'", history_files_dir);
+        HistoryPersistenceConfig::Enabled {
+            dir: history_files_dir.into(),
+            size_limit: history_files_dir_max_size,
+        }
+    } else {
+        HistoryPersistenceConfig::Disabled
+    };
+
     rocket = rocket.manage(UpdatingStatsHistory::new(
         System::new(),
         CPU_LOAD_SAMPLE_DURATION,
         STATS_UPDATE_FREQUENCY,
         NonZeroUsize::new(STATS_HISTORY_SIZE).unwrap(),
         NonZeroUsize::new(STATS_CONSOLIDATION_LIMIT).unwrap(),
-        history_files_dir.into(),
-        history_files_dir_max_size,
+        persistence_config,
     ));
 
     rocket
