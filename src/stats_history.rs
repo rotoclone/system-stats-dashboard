@@ -354,7 +354,11 @@ impl StatsHistory {
     }
 
     fn get_next_index(&self) -> usize {
-        (self.most_recent_index + 1) % (self.max_size.get() - 1)
+        if self.max_size.get() == 1 {
+            0
+        } else {
+            (self.most_recent_index + 1) % (self.max_size.get() - 1)
+        }
     }
 }
 
