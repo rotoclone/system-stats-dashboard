@@ -354,12 +354,12 @@ impl StatsHistory {
     }
 
     fn get_next_index(&self) -> usize {
-        if self.max_size.get() == 1 {
-            0
-        } else {
-            (self.most_recent_index + 1) % (self.max_size.get() - 1)
-        }
+        index_after(self.most_recent_index, self.max_size)
     }
+}
+
+fn index_after(i: usize, max_size: NonZeroUsize) -> usize {
+    (i + 1) % max_size.get()
 }
 
 impl<'a> IntoIterator for &'a StatsHistory {
@@ -401,9 +401,8 @@ impl<'a> Iterator for StatsHistoryIterator<'a> {
         if self.index == self.stats_history.most_recent_index {
             self.done = true;
         } else {
-            self.index = (self.index + 1) % (self.stats_history.max_size.get() - 1);
+            self.index = index_after(self.index, self.stats_history.max_size);
         }
-
         Some(result)
     }
 }
