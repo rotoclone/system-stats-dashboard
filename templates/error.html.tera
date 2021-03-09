@@ -1,0 +1,4 @@
+{% extends "base" %}
+{% block content %}
+    <p>{{ message }}</p>
+{% endblock content %}

@@ -13,6 +13,9 @@ use stats_history::*;
 mod dashboard_context;
 use dashboard_context::*;
 
+mod error_context;
+use error_context::*;
+
 #[macro_use]
 extern crate rocket;
 
@@ -29,6 +32,8 @@ const DEFAULT_HISTORY_FILES_DIRECTORY: &str = "./stats_history";
 
 const HISTORY_FILES_DIRECTORY_MAX_SIZE_CONFIG_KEY: &str = "history_files_max_size";
 const DEFAULT_HISTORY_FILES_DIRECTORY_MAX_SIZE: u64 = 2_000_000;
+
+const DEFAULT_DARK_MODE: bool = true;
 
 /// Endpoint to get all the system stats.
 #[get("/stats")]
@@ -101,11 +106,39 @@ fn get_network_stats() -> Json<NetworkStats> {
 /// Endpoint to view the dashboard.
 #[get("/dashboard?<dark>")]
 fn dashboard(stats_history: State<UpdatingStatsHistory>, dark: Option<bool>) -> Template {
-    let context = DashboardContext::from(
+    let context = DashboardContext::from_history(
         &stats_history.stats_history.lock().unwrap(),
-        dark.unwrap_or(true),
+        dark.unwrap_or(DEFAULT_DARK_MODE),
     );
     Template::render("dashboard", &context)
+}
+
+#[get("/dashboard/history?<dark>")]
+fn history_dashboard(
+    history_persistence_config: State<HistoryPersistenceConfig>,
+    dark: Option<bool>,
+) -> Result<Template, Status> {
+    match history_persistence_config.inner() {
+        HistoryPersistenceConfig::Enabled { dir, size_limit: _ } => {
+            let history = match StatsHistory::load_from(dir) {
+                Ok(x) => x,
+                Err(e) => {
+                    println!("Error loading persisted stats from {:?}: {}", dir, e);
+                    return Err(Status::InternalServerError);
+                }
+            };
+            let context =
+                DashboardContext::from_history(&history, dark.unwrap_or(DEFAULT_DARK_MODE));
+            Ok(Template::render("dashboard", &context))
+        }
+        HistoryPersistenceConfig::Disabled => Ok(Template::render(
+            "error",
+            &ErrorContext {
+                title: "Stats History".to_string(),
+                message: "Stats history persistence is disabled.".to_string(),
+            },
+        )),
+    }
 }
 
 #[launch]
@@ -121,6 +154,7 @@ fn rocket() -> rocket::Rocket {
                 get_filesystem_stats,
                 get_network_stats,
                 dashboard,
+                history_dashboard,
             ],
         )
         .attach(Template::fairing());
@@ -147,14 +181,16 @@ fn rocket() -> rocket::Rocket {
         HistoryPersistenceConfig::Disabled
     };
 
-    rocket = rocket.manage(UpdatingStatsHistory::new(
-        System::new(),
-        CPU_LOAD_SAMPLE_DURATION,
-        STATS_UPDATE_FREQUENCY,
-        NonZeroUsize::new(STATS_HISTORY_SIZE).unwrap(),
-        NonZeroUsize::new(STATS_CONSOLIDATION_LIMIT).unwrap(),
-        persistence_config,
-    ));
+    rocket = rocket
+        .manage(persistence_config.clone())
+        .manage(UpdatingStatsHistory::new(
+            System::new(),
+            CPU_LOAD_SAMPLE_DURATION,
+            STATS_UPDATE_FREQUENCY,
+            NonZeroUsize::new(STATS_HISTORY_SIZE).unwrap(),
+            NonZeroUsize::new(STATS_CONSOLIDATION_LIMIT).unwrap(),
+            persistence_config,
+        ));
 
     rocket
 }
