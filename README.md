@@ -16,16 +16,12 @@ By default:
 ### `/dashboard`
 Displays current stats, as well as graphs of some recent stats. Defaults to dark mode; add `?dark=false` for light mode.
 
-Dark mode:
-TODO screenshot
-
-Light mode:
-TODO screenshot
+![dark_dashboard](https://user-images.githubusercontent.com/48834501/111235475-b7458880-85be-11eb-90a0-0c5d3de4d49b.png)
 
 ### `/dashboard/history`
-Same as `/dashboard`, except for persisted stats. Also accepts `?dark=false` for light mode.
+Same as `/dashboard`, except for persisted stats.
 
-TODO screenshot
+![dark_history](https://user-images.githubusercontent.com/48834501/111235631-0be90380-85bf-11eb-8d27-e38435538b70.png)
 
 ## API
 
