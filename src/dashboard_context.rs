@@ -1,3 +1,5 @@
+//! Context for the dashboard template.
+
 use chrono::{DateTime, Local, NaiveDateTime, SecondsFormat, Utc};
 use serde::Serialize;
 
@@ -39,6 +41,7 @@ const LOAD_AVERAGE_5_FILL_COLOR: &str = "#bb00ff99"; // purple
 const LOAD_AVERAGE_15_LINE_COLOR: &str = "#7700ff"; // dark purple
 const LOAD_AVERAGE_15_FILL_COLOR: &str = "#7700ff99"; // dark purple
 
+/// Context for the dashboard template.
 #[derive(Serialize)]
 pub struct DashboardContext {
     title: String,
@@ -48,6 +51,7 @@ pub struct DashboardContext {
     last_update_time: String,
 }
 
+/// Context for a single chart in a dashboard.
 #[derive(Serialize)]
 struct ChartContext {
     /// The id of this chart. Must be unique.
@@ -72,6 +76,7 @@ struct ChartContext {
     accompanying_text_2: String,
 }
 
+/// Context for a single dataset in a chart.
 #[derive(Serialize)]
 struct DatasetContext {
     /// The name of this dataset.
@@ -86,16 +91,23 @@ struct DatasetContext {
     fill: bool,
 }
 
+/// Context for a section of a dashboard.
 #[derive(Serialize)]
 struct DashboardSectionContext {
+    /// The name of the section.
     name: String,
+    /// The stats in the section.
     stats: Vec<String>,
+    /// The subsections of this section.
     subsections: Vec<DashboardSubsectionContext>,
 }
 
+/// Context for a subsection of a dashboard.
 #[derive(Serialize)]
 struct DashboardSubsectionContext {
+    /// The name of the subsection.
     name: String,
+    /// The stats in the subsection.
     stats: Vec<String>,
 }
 

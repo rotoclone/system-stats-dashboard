@@ -1,3 +1,5 @@
+//! Provides a simple dashboard for viewing system stats, and an API for retrieving said stats programmatically.
+
 use std::num::NonZeroUsize;
 
 use rocket::{http::Status, State};
@@ -113,6 +115,7 @@ fn dashboard(stats_history: State<UpdatingStatsHistory>, dark: Option<bool>) -> 
     Template::render("dashboard", &context)
 }
 
+/// Endpoint to view a dashboard of persisted stats.
 #[get("/dashboard/history?<dark>")]
 fn history_dashboard(
     history_persistence_config: State<HistoryPersistenceConfig>,

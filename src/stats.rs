@@ -1,3 +1,5 @@
+//! A collection of system stats.
+
 use std::{io::Error, thread};
 
 use chrono::{DateTime, Local};
