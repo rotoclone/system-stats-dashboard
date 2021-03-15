@@ -2,7 +2,10 @@ use systemstat::System;
 use thread::JoinHandle;
 
 use crate::stats::*;
-use std::{fs::create_dir_all, io::Write};
+use std::{
+    fs::{create_dir_all, File},
+    io::{BufRead, BufReader, Write},
+};
 use std::{
     fs::{rename, OpenOptions},
     io,
@@ -24,6 +27,7 @@ pub struct UpdatingStatsHistory {
     pub stats_history: Arc<Mutex<StatsHistory>>,
 }
 
+#[derive(Clone)]
 pub enum HistoryPersistenceConfig {
     Disabled,
     Enabled {
@@ -281,6 +285,39 @@ impl StatsHistory {
         }
     }
 
+    /// Loads stats history from the provided directory.
+    /// # Params
+    /// * `dir` - The directory to find persisted stats history files in.
+    pub fn load_from(dir: &PathBuf) -> io::Result<StatsHistory> {
+        let mut stats = Vec::new();
+
+        let old_stats_path = dir.join(OLD_HISTORY_FILE_NAME);
+        let current_stats_path = dir.join(CURRENT_HISTORY_FILE_NAME);
+
+        if old_stats_path.exists() {
+            let old_stats_file = File::open(old_stats_path)?;
+            for line in BufReader::new(old_stats_file).lines() {
+                stats.push(serde_json::from_str(&line?)?);
+            }
+        }
+
+        if current_stats_path.exists() {
+            let current_stats_file = File::open(current_stats_path)?;
+            for line in BufReader::new(current_stats_file).lines() {
+                stats.push(serde_json::from_str(&line?)?);
+            }
+        }
+
+        match NonZeroUsize::new(stats.len()) {
+            Some(size) => Ok(StatsHistory {
+                max_size: size,
+                stats,
+                most_recent_index: size.get() - 1,
+            }),
+            None => Ok(StatsHistory::new(NonZeroUsize::new(1).unwrap())),
+        }
+    }
+
     /// Adds stats to the history.
     /// # Params
     /// * `new_stats` - The stats to add.
@@ -317,8 +354,12 @@ impl StatsHistory {
     }
 
     fn get_next_index(&self) -> usize {
-        (self.most_recent_index + 1) % (self.max_size.get() - 1)
+        index_after(self.most_recent_index, self.max_size)
     }
+}
+
+fn index_after(i: usize, max_size: NonZeroUsize) -> usize {
+    (i + 1) % max_size.get()
 }
 
 impl<'a> IntoIterator for &'a StatsHistory {
@@ -360,9 +401,8 @@ impl<'a> Iterator for StatsHistoryIterator<'a> {
         if self.index == self.stats_history.most_recent_index {
             self.done = true;
         } else {
-            self.index = (self.index + 1) % (self.stats_history.max_size.get() - 1);
+            self.index = index_after(self.index, self.stats_history.max_size);
         }
-
         Some(result)
     }
 }

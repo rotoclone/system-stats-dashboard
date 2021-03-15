@@ -104,7 +104,7 @@ impl DashboardContext {
     /// # Params
     /// * `stats_history` - The stats history to use to populate the context.
     /// * `dark_mode` - Whether dark mode is enabled or not.
-    pub fn from(stats_history: &StatsHistory, dark_mode: bool) -> DashboardContext {
+    pub fn from_history(stats_history: &StatsHistory, dark_mode: bool) -> DashboardContext {
         let title = "Dashboard".to_string();
 
         let mut sections = Vec::new();
