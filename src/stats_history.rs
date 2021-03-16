@@ -418,5 +418,3 @@ impl<'a> Iterator for StatsHistoryIterator<'a> {
         Some(result)
     }
 }
-
-//TODO tests
