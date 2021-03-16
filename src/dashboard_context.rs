@@ -113,7 +113,8 @@ struct DashboardSubsectionContext {
 
 impl DashboardContext {
     /// Builds a `DashboardContext` from the provided stats history.
-    /// # Params
+    ///
+    /// # Arguments
     /// * `stats_history` - The stats history to use to populate the context.
     /// * `dark_mode` - Whether dark mode is enabled or not.
     pub fn from_history(stats_history: &StatsHistory, dark_mode: bool) -> DashboardContext {
