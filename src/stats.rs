@@ -1,3 +1,5 @@
+//! A collection of system stats.
+
 use std::{io::Error, thread};
 
 use chrono::{DateTime, Local};
@@ -29,7 +31,8 @@ pub struct AllStats {
 
 impl AllStats {
     /// Gets all stats for the provided system.
-    /// # Params
+    ///
+    /// # Arguments
     /// * `sys` - The system to get stats from.
     /// * `cpu_sample_duration` - The amount of time to take to sample CPU load. Note that this function will block the thread it's in for this duration before returning.
     pub fn from(sys: &System, cpu_sample_duration: Duration) -> AllStats {
@@ -121,7 +124,8 @@ pub struct CpuStats {
 
 impl CpuStats {
     /// Gets CPU stats for the provided system.
-    /// # Params
+    ///
+    /// # Arguments
     /// * `sys` - The system to get stats from.
     /// * `sample_duration` - The amount of time to take to sample CPU load. Note that this function will block the thread it's in for this duration before returning.
     pub fn from(sys: &System, sample_duration: Duration) -> CpuStats {

@@ -1,3 +1,5 @@
+//! A history of stats.
+
 use systemstat::System;
 use thread::JoinHandle;
 
@@ -27,9 +29,12 @@ pub struct UpdatingStatsHistory {
     pub stats_history: Arc<Mutex<StatsHistory>>,
 }
 
+/// Configuration for stats history persistence.
 #[derive(Clone)]
 pub enum HistoryPersistenceConfig {
+    /// Persistence is disabled.
     Disabled,
+    /// Persistence is enabled.
     Enabled {
         /// The base directory to save the stats history to.
         dir: PathBuf,
@@ -40,7 +45,8 @@ pub enum HistoryPersistenceConfig {
 
 impl UpdatingStatsHistory {
     /// Creates an `UpdatingStatsHistory`.
-    /// # Params
+    ///
+    /// # Arguments
     /// * `system` - The system to gather stats from.
     /// * `cpu_sample_duration` - The amount of time to take to sample CPU load. Must be less than `update_frequency`.
     /// * `update_frequency` - How often new stats should be gathered. Must be greater than `cpu_sample_duration`.
@@ -229,7 +235,8 @@ fn persist_stats(stats: &AllStats, dir: &Path, dir_size_limit_bytes: u64) -> io:
 
 trait MovingAverage<T> {
     /// Updates the average to take into account a new value.
-    /// # Params
+    ///
+    /// # Arguments
     /// * `new_value` - The new value to add to the average.
     /// * `n` - The number of values in the dataset (including the new one).
     ///
@@ -245,7 +252,8 @@ impl MovingAverage<f32> for f32 {
 
 trait MovingAverageCollection<T> {
     /// Updates the averages to take into account a new set of values.
-    /// # Params
+    ///
+    /// # Arguments
     /// * `new_values` - The new values to add to the averages. If larger than `self`, `self` will be padded with zeroes to match its size.
     /// * `n` - The number of sets of values in the dataset (including the new ones).
     fn update_averages(&mut self, new_values: &[T], n: usize);
@@ -275,7 +283,8 @@ pub struct StatsHistory {
 
 impl StatsHistory {
     /// Creates a `StatsHistory`.
-    /// # Params
+    ///
+    /// # Arguments
     /// * `max_size` - The maximum number of entries to hold in this history.
     pub fn new(max_size: NonZeroUsize) -> StatsHistory {
         StatsHistory {
@@ -286,7 +295,8 @@ impl StatsHistory {
     }
 
     /// Loads stats history from the provided directory.
-    /// # Params
+    ///
+    /// # Arguments
     /// * `dir` - The directory to find persisted stats history files in.
     pub fn load_from(dir: &PathBuf) -> io::Result<StatsHistory> {
         let mut stats = Vec::new();
@@ -319,7 +329,8 @@ impl StatsHistory {
     }
 
     /// Adds stats to the history.
-    /// # Params
+    ///
+    /// # Arguments
     /// * `new_stats` - The stats to add.
     fn push(&mut self, new_stats: AllStats) {
         if self.stats.len() == self.max_size.get() {
@@ -334,7 +345,8 @@ impl StatsHistory {
     }
 
     /// Replaces the most recently added stats with the provided stats.
-    /// # Params
+    ///
+    /// # Arguments
     /// * `new_stats` - The stats to replace the most recent stats with.
     fn update_most_recent_stats(&mut self, new_stats: AllStats) {
         if self.stats.is_empty() {
@@ -406,5 +418,3 @@ impl<'a> Iterator for StatsHistoryIterator<'a> {
         Some(result)
     }
 }
-
-//TODO tests

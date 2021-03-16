@@ -1,3 +1,5 @@
+//! Provides a simple dashboard for viewing system stats, and an API for retrieving said stats programmatically.
+
 use std::num::NonZeroUsize;
 
 use rocket::{http::Status, State};
@@ -19,9 +21,9 @@ use error_context::*;
 #[macro_use]
 extern crate rocket;
 
-pub const STATS_HISTORY_SIZE: usize = 180;
-pub const STATS_CONSOLIDATION_LIMIT: usize = 20;
-pub const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
+const STATS_HISTORY_SIZE: usize = 180;
+const STATS_CONSOLIDATION_LIMIT: usize = 20;
+const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
 const CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(500);
 
 const PERSIST_HISTORY_TOGGLE_CONFIG_KEY: &str = "persist_history";
@@ -113,6 +115,7 @@ fn dashboard(stats_history: State<UpdatingStatsHistory>, dark: Option<bool>) -> 
     Template::render("dashboard", &context)
 }
 
+/// Endpoint to view a dashboard of persisted stats.
 #[get("/dashboard/history?<dark>")]
 fn history_dashboard(
     history_persistence_config: State<HistoryPersistenceConfig>,
