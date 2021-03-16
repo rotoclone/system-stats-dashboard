@@ -1,4 +1,4 @@
-# system-stats-api
+# system-stats-dashboard
 Provides a simple dashboard for viewing system stats, and an API for retrieving said stats programmatically.
 
 There are 3 levels of stats: "current", "recent", and "persisted". Current and recent stats are all kept in memory, and persisted stats are saved to disk. The recent stats are a subset of the persisted stats.
