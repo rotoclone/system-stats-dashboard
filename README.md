@@ -9,6 +9,19 @@ By default:
 * 180 entries (3 hours) are kept in the recent list, and 2 megabytes (~2000 entries, ~33 hours) are kept in the persisted list.
 * Persisted stats are stored in `./stats_history`.
 
+# Configuration
+Configuration options are located in `Rocket.toml`.
+|Name|Default value|Description|
+|----|-------------|-----------|
+|address|`"0.0.0.0"`|The address to run the server on|
+|port|`8000`|The port to run the server on|
+|recent_history_size|`180`|The number of entries to keep in recent history|
+|consolidation_limit|`20`|The number of entries to collect before consolidating them and writing an entry to recent and persisted stats|
+|update_frequency_seconds|`3`|The number of seconds to wait between each stats collection|
+|persist_history|`true`|Whether to persist stats to disk or not. If set to `false`, all the config options below are ignored.|
+|history_files_directory|`"./stats_history"`|The directory to persist stats to|
+|history_files_max_size_bytes|`2_000_000`|The maximum size, in bytes, to allow `history_files_directory` to grow to|
+
 # Endpoints
 
 ## Dashboard
