@@ -1571,7 +1571,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "system-stats-api"
+name = "system-stats-dashboard"
 version = "0.1.0"
 dependencies = [
  "chrono",
