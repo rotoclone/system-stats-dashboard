@@ -2,8 +2,9 @@
 
 use std::num::NonZeroUsize;
 
-use rocket::{http::Status, State};
+use rocket::{figment::Figment, http::Status, State};
 use rocket_contrib::{json::Json, templates::Template};
+use serde::Deserialize;
 use systemstat::{Duration, Platform, System};
 
 mod stats;
@@ -21,10 +22,17 @@ use error_context::*;
 #[macro_use]
 extern crate rocket;
 
-const STATS_HISTORY_SIZE: usize = 180;
-const STATS_CONSOLIDATION_LIMIT: usize = 20;
-const STATS_UPDATE_FREQUENCY: Duration = Duration::from_secs(3);
 const CPU_LOAD_SAMPLE_DURATION: Duration = Duration::from_millis(500);
+const DEFAULT_DARK_MODE: bool = true;
+
+const RECENT_HISTORY_SIZE_CONFIG_KEY: &str = "recent_history_size";
+const DEFAULT_RECENT_HISTORY_SIZE: usize = 180;
+
+const CONSOLIDATION_LIMIT_CONFIG_KEY: &str = "consolidation_limit";
+const DEFAULT_CONSOLIDATION_LIMIT: usize = 20;
+
+const UPDATE_FREQUENCY_CONFIG_KEY: &str = "update_frequency_seconds";
+const DEFAULT_UPDATE_FREQUENCY_SECONDS: u64 = 3;
 
 const PERSIST_HISTORY_TOGGLE_CONFIG_KEY: &str = "persist_history";
 const DEFAULT_PERSIST_HISTORY_TOGGLE: bool = true;
@@ -32,10 +40,8 @@ const DEFAULT_PERSIST_HISTORY_TOGGLE: bool = true;
 const HISTORY_FILES_DIRECTORY_CONFIG_KEY: &str = "history_files_directory";
 const DEFAULT_HISTORY_FILES_DIRECTORY: &str = "./stats_history";
 
-const HISTORY_FILES_DIRECTORY_MAX_SIZE_CONFIG_KEY: &str = "history_files_max_size";
-const DEFAULT_HISTORY_FILES_DIRECTORY_MAX_SIZE: u64 = 2_000_000;
-
-const DEFAULT_DARK_MODE: bool = true;
+const HISTORY_FILES_DIRECTORY_MAX_SIZE_CONFIG_KEY: &str = "history_files_max_size_bytes";
+const DEFAULT_HISTORY_FILES_DIRECTORY_MAX_SIZE_BYTES: u64 = 2_000_000;
 
 /// Endpoint to get all the system stats.
 #[get("/stats")]
@@ -162,20 +168,42 @@ fn rocket() -> rocket::Rocket {
         )
         .attach(Template::fairing());
 
-    let history_persistence_enabled = rocket
-        .figment()
-        .extract_inner(PERSIST_HISTORY_TOGGLE_CONFIG_KEY)
-        .unwrap_or(DEFAULT_PERSIST_HISTORY_TOGGLE);
+    let config = rocket.figment();
+
+    let update_frequency_secs = get_config_value(
+        config,
+        UPDATE_FREQUENCY_CONFIG_KEY,
+        DEFAULT_UPDATE_FREQUENCY_SECONDS,
+    );
+
+    let recent_history_size = get_config_value(
+        config,
+        RECENT_HISTORY_SIZE_CONFIG_KEY,
+        DEFAULT_RECENT_HISTORY_SIZE,
+    );
+
+    let consolidation_limit = get_config_value(
+        config,
+        CONSOLIDATION_LIMIT_CONFIG_KEY,
+        DEFAULT_CONSOLIDATION_LIMIT,
+    );
+
+    let history_persistence_enabled = get_config_value(
+        config,
+        PERSIST_HISTORY_TOGGLE_CONFIG_KEY,
+        DEFAULT_PERSIST_HISTORY_TOGGLE,
+    );
     let persistence_config = if history_persistence_enabled {
-        let history_files_dir = rocket
-            .figment()
-            .extract_inner(HISTORY_FILES_DIRECTORY_CONFIG_KEY)
-            .unwrap_or(DEFAULT_HISTORY_FILES_DIRECTORY);
-        let history_files_dir_max_size = rocket
-            .figment()
-            .extract_inner(HISTORY_FILES_DIRECTORY_MAX_SIZE_CONFIG_KEY)
-            .unwrap_or(DEFAULT_HISTORY_FILES_DIRECTORY_MAX_SIZE);
-        println!("Stats history will be persisted to '{}'", history_files_dir);
+        let history_files_dir = get_config_value(
+            config,
+            HISTORY_FILES_DIRECTORY_CONFIG_KEY,
+            DEFAULT_HISTORY_FILES_DIRECTORY.to_string(),
+        );
+        let history_files_dir_max_size = get_config_value(
+            config,
+            HISTORY_FILES_DIRECTORY_MAX_SIZE_CONFIG_KEY,
+            DEFAULT_HISTORY_FILES_DIRECTORY_MAX_SIZE_BYTES,
+        );
         HistoryPersistenceConfig::Enabled {
             dir: history_files_dir.into(),
             size_limit: history_files_dir_max_size,
@@ -189,11 +217,28 @@ fn rocket() -> rocket::Rocket {
         .manage(UpdatingStatsHistory::new(
             System::new(),
             CPU_LOAD_SAMPLE_DURATION,
-            STATS_UPDATE_FREQUENCY,
-            NonZeroUsize::new(STATS_HISTORY_SIZE).unwrap(),
-            NonZeroUsize::new(STATS_CONSOLIDATION_LIMIT).unwrap(),
+            Duration::from_secs(update_frequency_secs),
+            NonZeroUsize::new(recent_history_size).unwrap(),
+            NonZeroUsize::new(consolidation_limit).unwrap(),
             persistence_config,
         ));
 
     rocket
+}
+
+/// Gets a value from the provided configuration, returning `default` if it's not found.
+fn get_config_value<'a, T>(config: &Figment, key: &str, default: T) -> T
+where
+    T: Deserialize<'a> + std::fmt::Debug,
+{
+    match config.extract_inner(key) {
+        Ok(x) => {
+            println!("Using configured value {:?} for {}", x, key);
+            x
+        }
+        Err(e) => {
+            println!("Using default value {:?} for {} ({})", default, key, e);
+            default
+        }
+    }
 }

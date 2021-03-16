@@ -1,6 +1,9 @@
 [default]
 address = "0.0.0.0"
 port = 8000
+recent_history_size = 180
+consolidation_limit = 20
+update_frequency_seconds = 3
 persist_history = true
 history_files_directory = "./stats_history"
-history_files_max_size = 2_000_000
+history_files_max_size_bytes = 2_000_000
