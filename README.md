@@ -21,8 +21,6 @@ Displays current stats, as well as graphs of some recent stats. Defaults to dark
 ### `/dashboard/history`
 Same as `/dashboard`, except for persisted stats.
 
-![dark_history](https://user-images.githubusercontent.com/48834501/111235631-0be90380-85bf-11eb-8d27-e38435538b70.png)
-
 ## API
 
 ### GET `/stats`
