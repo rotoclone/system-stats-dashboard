@@ -27,38 +27,157 @@ Same as `/dashboard`, except for persisted stats.
 
 ### GET `/stats`
 Returns all the most recently collected stats.
+
+Example response:
 ```json
-TODO
+{
+  "general": {
+    "uptimeSeconds": 5239,
+    "bootTimestamp": 1615846969,
+    "loadAverages": {
+      "oneMinute": 0.0,
+      "fiveMinutes": 0.01,
+      "fifteenMinutes": 0.0
+    }
+  },
+  "cpu": {
+    "perLogicalCpuLoadPercent": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "aggregateLoadPercent": 0.2450943,
+    "tempCelsius": 50.464
+  },
+  "memory": {
+    "usedMb": 52,
+    "totalMb": 969
+  },
+  "filesystems": [
+    {
+      "fsType": "ext4",
+      "mountedFrom": "/dev/root",
+      "mountedOn": "/",
+      "usedMb": 8208,
+      "totalMb": 62699
+    }
+  ],
+  "network": {
+    "interfaces": [
+      {
+        "name": "wlan0",
+        "addresses": [
+          "192.168.1.100"
+        ],
+        "sentMb": 1,
+        "receivedMb": 1,
+        "sentPackets": 4391,
+        "receivedPackets": 7024,
+        "sendErrors": 0,
+        "receiveErrors": 0
+      }
+    ],
+    "sockets": {
+      "tcpInUse": 5,
+      "tcpOrphaned": 0,
+      "udpInUse": 4,
+      "tcp6InUse": 4,
+      "udp6InUse": 3
+    }
+  },
+  "collectionTime": "2021-03-15T18:50:07.721739139-05:00"
+}
 ```
 
 ### GET `/stats/general`
 Returns the most recently collected general stats.
+
+Example response:
 ```json
-TODO
+{
+  "uptimeSeconds": 5239,
+  "bootTimestamp": 1615846969,
+  "loadAverages": {
+    "oneMinute": 0.0,
+    "fiveMinutes": 0.01,
+    "fifteenMinutes": 0.0
+  }
+}
 ```
 
 ### GET `/stats/cpu`
 Returns the most recently collected stats related to the CPU.
+
+Example response:
 ```json
-TODO
+{
+  "perLogicalCpuLoadPercent": [
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "aggregateLoadPercent": 0.2450943,
+  "tempCelsius": 50.464
+}
 ```
 
 ### GET `/stats/memory`
 Returns the most recently collected stats related to memory.
+
+Example response:
 ```json
-TODO
+{
+  "usedMb": 52,
+  "totalMb": 969
+}
 ```
 
 ### GET `/stats/filesystems`
 Returns the most recently collected stats related to filesystems.
+
+Example response:
 ```json
-TODO
+[
+  {
+    "fsType": "ext4",
+    "mountedFrom": "/dev/root",
+    "mountedOn": "/",
+    "usedMb": 8208,
+    "totalMb": 62699
+  }
+]
 ```
 
 ### GET `/stats/network`
 Returns the most recently collected stats related to the network.
+
+Example response:
 ```json
-TODO
+{
+  "interfaces": [
+    {
+      "name": "wlan0",
+      "addresses": [
+        "192.168.1.100"
+      ],
+      "sentMb": 1,
+      "receivedMb": 1,
+      "sentPackets": 4391,
+      "receivedPackets": 7024,
+      "sendErrors": 0,
+      "receiveErrors": 0
+    }
+  ],
+  "sockets": {
+    "tcpInUse": 5,
+    "tcpOrphaned": 0,
+    "udpInUse": 4,
+    "tcp6InUse": 4,
+    "udp6InUse": 3
+  }
+}
 ```
 
 # Possible features to add
