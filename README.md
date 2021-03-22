@@ -9,6 +9,11 @@ By default:
 * 180 entries (3 hours) are kept in the recent list, and 2 megabytes (~2000 entries, ~33 hours) are kept in the persisted list.
 * Persisted stats are stored in `./stats_history`.
 
+# Running
+* Download the release for your platform from the [releases page](https://github.com/rotoclone/system-stats-dashboard/releases) and unzip it to a directory you like.
+* Run the `system-stats-dashboard` executable.
+* Go to `localhost:8001/dashboard` and take a gander at some stats.
+
 # Configuration
 Configuration options are located in `Rocket.toml`.
 |Name|Default value|Description|
