@@ -14,7 +14,7 @@ Configuration options are located in `Rocket.toml`.
 |Name|Default value|Description|
 |----|-------------|-----------|
 |address|`"0.0.0.0"`|The address to run the server on|
-|port|`8000`|The port to run the server on|
+|port|`8001`|The port to run the server on|
 |recent_history_size|`180`|The number of entries to keep in recent history|
 |consolidation_limit|`20`|The number of entries to collect before consolidating them and writing an entry to recent and persisted stats|
 |update_frequency_seconds|`3`|The number of seconds to wait between each stats collection|
