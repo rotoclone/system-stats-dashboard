@@ -2,7 +2,7 @@
 
 use std::num::NonZeroUsize;
 
-use rocket::{figment::Figment, http::Status, State};
+use rocket::{figment::Figment, http::Status, Rocket, State};
 use rocket_contrib::{json::Json, templates::Template};
 use serde::Deserialize;
 use systemstat::{Duration, Platform, System};
@@ -151,8 +151,8 @@ fn history_dashboard(
 }
 
 #[launch]
-fn rocket() -> rocket::Rocket {
-    let mut rocket = rocket::ignite()
+fn rocket() -> Rocket<rocket::Build> {
+    let mut rocket = rocket::build()
         .mount(
             "/",
             routes![
