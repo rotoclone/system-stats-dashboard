@@ -298,25 +298,14 @@ impl StatsHistory {
     ///
     /// # Arguments
     /// * `dir` - The directory to find persisted stats history files in.
-    pub fn load_from(dir: &PathBuf) -> io::Result<StatsHistory> {
+    pub fn load_from(dir: &Path) -> io::Result<StatsHistory> {
         let mut stats = Vec::new();
 
         let old_stats_path = dir.join(OLD_HISTORY_FILE_NAME);
         let current_stats_path = dir.join(CURRENT_HISTORY_FILE_NAME);
 
-        if old_stats_path.exists() {
-            let old_stats_file = File::open(old_stats_path)?;
-            for line in BufReader::new(old_stats_file).lines() {
-                stats.push(serde_json::from_str(&line?)?);
-            }
-        }
-
-        if current_stats_path.exists() {
-            let current_stats_file = File::open(current_stats_path)?;
-            for line in BufReader::new(current_stats_file).lines() {
-                stats.push(serde_json::from_str(&line?)?);
-            }
-        }
+        add_stats_from_file(old_stats_path, &mut stats)?;
+        add_stats_from_file(current_stats_path, &mut stats)?;
 
         match NonZeroUsize::new(stats.len()) {
             Some(size) => Ok(StatsHistory {
@@ -370,6 +359,23 @@ impl StatsHistory {
     }
 }
 
+/// Adds stats from the file at the provided path (if it exists) to the provided list of stats
+fn add_stats_from_file(path: PathBuf, stats: &mut Vec<AllStats>) -> io::Result<()> {
+    if path.exists() {
+        let file = File::open(path)?;
+        for line in BufReader::new(file).lines() {
+            let line = line?;
+            if line.trim().is_empty() {
+                continue;
+            }
+            stats.push(serde_json::from_str(&line)?);
+        }
+    }
+
+    Ok(())
+}
+
+/// Finds the index after the provided index, looping around if the maximum index is reached.
 fn index_after(i: usize, max_size: NonZeroUsize) -> usize {
     (i + 1) % max_size.get()
 }
