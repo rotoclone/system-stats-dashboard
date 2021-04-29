@@ -365,10 +365,11 @@ fn add_stats_from_file(path: PathBuf, stats: &mut Vec<AllStats>) -> io::Result<(
         let file = File::open(path)?;
         for line in BufReader::new(file).lines() {
             let line = line?;
-            if line.trim().is_empty() {
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
                 continue;
             }
-            stats.push(serde_json::from_str(&line)?);
+            stats.push(serde_json::from_str(trimmed)?);
         }
     }
 
