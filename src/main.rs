@@ -2,8 +2,9 @@
 
 use std::num::NonZeroUsize;
 
+use rocket::serde::json::Json;
 use rocket::{figment::Figment, http::Status, Rocket, State};
-use rocket_contrib::{json::Json, templates::Template};
+use rocket_contrib::templates::Template;
 use serde::Deserialize;
 use systemstat::{Duration, Platform, System};
 
@@ -45,7 +46,7 @@ const DEFAULT_HISTORY_FILES_DIRECTORY_MAX_SIZE_BYTES: u64 = 2_000_000;
 
 /// Endpoint to get all the system stats.
 #[get("/stats")]
-fn get_all_stats(stats_history: State<UpdatingStatsHistory>) -> Result<Json<AllStats>, Status> {
+fn get_all_stats(stats_history: &State<UpdatingStatsHistory>) -> Result<Json<AllStats>, Status> {
     match stats_history
         .stats_history
         .lock()
@@ -60,7 +61,7 @@ fn get_all_stats(stats_history: State<UpdatingStatsHistory>) -> Result<Json<AllS
 /// Endpoint to get general stats.
 #[get("/stats/general")]
 fn get_general_stats(
-    stats_history: State<UpdatingStatsHistory>,
+    stats_history: &State<UpdatingStatsHistory>,
 ) -> Result<Json<GeneralStats>, Status> {
     match stats_history
         .stats_history
@@ -75,7 +76,7 @@ fn get_general_stats(
 
 /// Endpoint to get CPU stats.
 #[get("/stats/cpu")]
-fn get_cpu_stats(stats_history: State<UpdatingStatsHistory>) -> Result<Json<CpuStats>, Status> {
+fn get_cpu_stats(stats_history: &State<UpdatingStatsHistory>) -> Result<Json<CpuStats>, Status> {
     match stats_history
         .stats_history
         .lock()
@@ -113,7 +114,7 @@ fn get_network_stats() -> Json<NetworkStats> {
 
 /// Endpoint to view the dashboard.
 #[get("/dashboard?<dark>")]
-fn dashboard(stats_history: State<UpdatingStatsHistory>, dark: Option<bool>) -> Template {
+fn dashboard(stats_history: &State<UpdatingStatsHistory>, dark: Option<bool>) -> Template {
     let context = DashboardContext::from_history(
         &stats_history.stats_history.lock().unwrap(),
         dark.unwrap_or(DEFAULT_DARK_MODE),
@@ -124,7 +125,7 @@ fn dashboard(stats_history: State<UpdatingStatsHistory>, dark: Option<bool>) -> 
 /// Endpoint to view a dashboard of persisted stats.
 #[get("/dashboard/history?<dark>")]
 fn history_dashboard(
-    history_persistence_config: State<HistoryPersistenceConfig>,
+    history_persistence_config: &State<HistoryPersistenceConfig>,
     dark: Option<bool>,
 ) -> Result<Template, Status> {
     match history_persistence_config.inner() {
