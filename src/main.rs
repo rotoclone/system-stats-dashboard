@@ -4,7 +4,7 @@ use std::num::NonZeroUsize;
 
 use rocket::serde::json::Json;
 use rocket::{figment::Figment, http::Status, Rocket, State};
-use rocket_contrib::templates::Template;
+use rocket_dyn_templates::Template;
 use serde::Deserialize;
 use systemstat::{Duration, Platform, System};
 

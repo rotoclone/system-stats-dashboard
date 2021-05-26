@@ -17,8 +17,9 @@ checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 
 [[package]]
 name = "async-stream"
-version = "0.3.0"
-source = "git+https://github.com/SergioBenitez/async-stream.git?rev=c46ada9#c46ada948e0d4800393836f57eb2a3db516beb1e"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "171374e7e3b2504e0e5236e3b59260560f9fe94bfe9ac39ba5e4e929c5590625"
 dependencies = [
  "async-stream-impl",
  "futures-core",
@@ -26,8 +27,9 @@ dependencies = [
 
 [[package]]
 name = "async-stream-impl"
-version = "0.3.0"
-source = "git+https://github.com/SergioBenitez/async-stream.git?rev=c46ada9#c46ada948e0d4800393836f57eb2a3db516beb1e"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "648ed8c8d2ce5409ccd57453d9d1b214b342a0d69376a6feda1fd6cae3299308"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -163,9 +165,9 @@ checksum = "81a18687293a1546b67c246452202bbbf143d239cb43494cc163da14979082da"
 
 [[package]]
 name = "cc"
-version = "1.0.67"
+version = "1.0.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3c69b077ad434294d3ce9f1f6143a2a4b89a8a2d54ef813d85003a4fd1137fd"
+checksum = "4a72c244c1ff497a746a7e1fb3d14bd08420ecda70c8f25c7112f2781652d787"
 
 [[package]]
 name = "cfg-if"
@@ -615,9 +617,9 @@ checksum = "f3a87b616e37e93c22fb19bcd386f02f3af5ea98a25670ad0fce773de23c5e68"
 
 [[package]]
 name = "httpdate"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05842d0d43232b23ccb7060ecb0f0626922c21f30012e97b767b30afd4a5d4b9"
+checksum = "6456b8a6c8f33fee7d958fcd1b60d55b11940a79e63ae87013e6d22e26034440"
 
 [[package]]
 name = "humansize"
@@ -627,9 +629,9 @@ checksum = "02296996cb8796d7c6e3bc2d9211b7802812d36999a51bb754123ead7d37d026"
 
 [[package]]
 name = "hyper"
-version = "0.14.7"
+version = "0.14.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e5f105c494081baa3bf9e200b279e27ec1623895cd504c7dbef8d0b080fcf54"
+checksum = "d3f71a7eea53a3f8257a7b4795373ff886397178cd634430ea94e12d7fe4fe34"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -765,9 +767,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.94"
+version = "0.2.95"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18794a8ad5b29321f790b55d93dfba91e125cb1a9edbd4f8e3150acc771c1a5e"
+checksum = "789da6d93f1b866ffe175afc5322a4d76c038605a1c3319bb57b06967ca98a36"
 
 [[package]]
 name = "lock_api"
@@ -1296,7 +1298,7 @@ dependencies = [
 [[package]]
 name = "rocket"
 version = "0.5.0-dev"
-source = "git+https://github.com/SergioBenitez/Rocket?branch=master#a7cfa4c8b73279158136d0a20855815659dfbfb6"
+source = "git+https://github.com/SergioBenitez/Rocket?branch=master#5a4e66ec439411d30f16e5c045f8e4986f5883a4"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -1333,7 +1335,7 @@ dependencies = [
 [[package]]
 name = "rocket_codegen"
 version = "0.5.0-dev"
-source = "git+https://github.com/SergioBenitez/Rocket?branch=master#a7cfa4c8b73279158136d0a20855815659dfbfb6"
+source = "git+https://github.com/SergioBenitez/Rocket?branch=master#5a4e66ec439411d30f16e5c045f8e4986f5883a4"
 dependencies = [
  "devise",
  "glob",
@@ -1346,12 +1348,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "rocket_contrib"
-version = "0.5.0-dev"
-source = "git+https://github.com/SergioBenitez/Rocket?branch=master#a7cfa4c8b73279158136d0a20855815659dfbfb6"
+name = "rocket_dyn_templates"
+version = "0.1.0-dev"
+source = "git+https://github.com/SergioBenitez/Rocket?branch=master#5a4e66ec439411d30f16e5c045f8e4986f5883a4"
 dependencies = [
  "glob",
- "log",
  "normpath",
  "notify",
  "rocket",
@@ -1363,7 +1364,7 @@ dependencies = [
 [[package]]
 name = "rocket_http"
 version = "0.5.0-dev"
-source = "git+https://github.com/SergioBenitez/Rocket?branch=master#a7cfa4c8b73279158136d0a20855815659dfbfb6"
+source = "git+https://github.com/SergioBenitez/Rocket?branch=master#5a4e66ec439411d30f16e5c045f8e4986f5883a4"
 dependencies = [
  "cookie",
  "either",
@@ -1637,7 +1638,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "rocket",
- "rocket_contrib",
+ "rocket_dyn_templates",
  "serde",
  "serde_json",
  "systemstat",
