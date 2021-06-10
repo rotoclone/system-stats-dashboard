@@ -6,8 +6,8 @@ edition = "2018"
 
 [dependencies]
 systemstat = "0.1.7"
-rocket = { git = "https://github.com/SergioBenitez/Rocket", branch = "master", features = ["json"] }
-rocket_dyn_templates = { git = "https://github.com/SergioBenitez/Rocket", branch = "master", default-features = false, features = ["tera"] }
+rocket = { version = "0.5.0-rc.1", features = ["json"] }
+rocket_dyn_templates = { version = "0.1.0-rc.1", features = ["tera"] }
 serde = "1.0"
 serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
