@@ -199,3 +199,8 @@ Example response:
 # Possible features to add
 * Load saved history from disk on startup
 * Send emails if certain stats are above/below certain values for a certain amount of time
+
+## Building for Raspberry Pi from Windows
+1. Get linker from https://gnutoolchains.com/raspberry/
+1. Add target: `rustup target add armv7-unknown-linux-gnueabihf`
+1. Build: `cargo build --release --target=armv7-unknown-linux-gnueabihf`
